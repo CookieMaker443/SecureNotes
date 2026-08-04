@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -22,6 +23,7 @@ public class LoginActivity extends AppCompatActivity {
     private SecurePrefsManager prefsManager;
     private EditText pinInput;
     private Button loginButton;
+    private ImageButton settingsButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,11 +31,14 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         prefsManager = new SecurePrefsManager(this);
+
         pinInput = findViewById(R.id.pinInput);
         loginButton = findViewById(R.id.loginButton);
+        settingsButton = findViewById(R.id.settingsButton);
         Button biometricButton = findViewById(R.id.biometricButton);
 
         loginButton.setOnClickListener(v -> handlePinLogin());
+        settingsButton.setOnClickListener(v -> handleSettingsClick());
         biometricButton.setOnClickListener(v -> showBiometricPrompt());
 
         // Se non c'è un PIN salvato, il primo inserimento lo salva (per demo)
@@ -69,6 +74,9 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+    private void handleSettingsClick() {
+        Toast.makeText(this, getString(R.string.test_settings), Toast.LENGTH_SHORT).show();
+    }
     private void showBiometricPrompt() {
         Executor executor = ContextCompat.getMainExecutor(this);
         BiometricPrompt biometricPrompt = new BiometricPrompt(LoginActivity.this,

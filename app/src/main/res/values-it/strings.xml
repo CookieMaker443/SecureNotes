@@ -11,4 +11,5 @@
     <string name="biometric_prompt_title">Login biometrico</string>
     <string name="biometric_prompt_subtitle">Login con credenziali biometriche</string>
     <string name="biometric_prompt_negative_text">usa il PIN</string>
+    <string name="settings_button_description">Impostazioni</string>
 </resources>
