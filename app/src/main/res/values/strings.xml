@@ -1,3 +1,18 @@
 <resources>
-    <string name="app_name">SecureNotes</string>
+    <string name="app_name" translatable="false">SecureNotes</string>
+    <string name="login_title" translatable="false">Secure Notes Login</string>
+    <string name="hint_pin">Enter PIN</string>
+    <string name="btn_login" translatable="false">Login</string>
+    <string name="btn_use_biometrics">Use Biometrics</string>
+    <string name="dashboard_title">Dashboard Screen</string>
+    <string name="toast_set_new_pin">Set a new PIN</string>
+    <string name="btn_set_pin">Set PIN</string>
+    <string name="toast_enter_pin">Please enter PIN</string>
+    <string name="toast_pin_saved">PIN Saved</string>
+    <string name="toast_incorrect_pin">Incorrect PIN</string>
+    <string name="auth_error_prefix" translatable="false">Auth error: %1$s</string>
+    <string name="auth_failed">Auth failed</string>
+    <string name="biometric_prompt_title">Biometric Login</string>
+    <string name="biometric_prompt_subtitle">Log in using your biometric credential</string>
+    <string name="biometric_prompt_negative_text">Use PIN</string>
 </resources>

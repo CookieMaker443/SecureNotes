@@ -1,0 +1,14 @@
+<resources>
+    <string name="hint_pin">Inserisci il PIN</string>
+    <string name="btn_use_biometrics">Usa scan biometrica</string>
+    <string name="dashboard_title">Dashboard</string>
+    <string name="toast_set_new_pin">Imposta un nuovo  PIN</string>
+    <string name="btn_set_pin">Imposta il PIN</string>
+    <string name="toast_enter_pin">Inserisci il PIN</string>
+    <string name="toast_pin_saved">PIN salvato</string>
+    <string name="toast_incorrect_pin">PIN errato</string>
+    <string name="auth_failed">Auth fallita</string>
+    <string name="biometric_prompt_title">Login biometrico</string>
+    <string name="biometric_prompt_subtitle">Login con credenziali biometriche</string>
+    <string name="biometric_prompt_negative_text">usa il PIN</string>
+</resources>
