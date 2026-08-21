@@ -25,6 +25,11 @@
             </intent-filter>
         </activity>
         <activity android:name=".ui.dashboard.DashboardActivity" android:exported="false" />
+        <activity
+            android:name=".ui.settings.SettingsActivity"
+            android:label="@string/settings_title"
+            android:parentActivityName=".ui.dashboard.DashboardActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

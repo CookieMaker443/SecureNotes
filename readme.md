@@ -12,3 +12,6 @@
 │   ├── crypto/          (KeystoreManager, FileEncryptionManager)
 │   └── repository/      (NoteRepository, FileRepository)
 └── util/                (SessionManager, BackupManager)
+
+## Nota
+la cartella docs è consigliabile aprirla con il software `Obsidian`

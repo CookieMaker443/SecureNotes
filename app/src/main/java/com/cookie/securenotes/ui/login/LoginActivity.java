@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -23,7 +22,6 @@ public class LoginActivity extends AppCompatActivity {
     private SecurePrefsManager prefsManager;
     private EditText pinInput;
     private Button loginButton;
-    private ImageButton settingsButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,19 +32,15 @@ public class LoginActivity extends AppCompatActivity {
 
         pinInput = findViewById(R.id.pinInput);
         loginButton = findViewById(R.id.loginButton);
-        settingsButton = findViewById(R.id.settingsButton);
         Button biometricButton = findViewById(R.id.biometricButton);
 
         loginButton.setOnClickListener(v -> handlePinLogin());
-        settingsButton.setOnClickListener(v -> handleSettingsClick());
         biometricButton.setOnClickListener(v -> showBiometricPrompt());
 
-        // Se non c'è un PIN salvato, il primo inserimento lo salva (per demo)
         if (!prefsManager.hasPin()) {
             Toast.makeText(this, getString(R.string.toast_set_new_pin), Toast.LENGTH_SHORT).show();
             loginButton.setText(getString(R.string.btn_set_pin));
         } else {
-            // Se il biometrico è abilitato, lo mostriamo all'avvio
             if (prefsManager.isBiometricEnabled()) {
                 showBiometricPrompt();
             }
@@ -62,7 +56,7 @@ public class LoginActivity extends AppCompatActivity {
 
         if (!prefsManager.hasPin()) {
             prefsManager.savePin(pin);
-            prefsManager.setBiometricEnabled(true); // Abilitiamo biometrico al primo setup
+            prefsManager.setBiometricEnabled(true);
             Toast.makeText(this, getString(R.string.toast_pin_saved), Toast.LENGTH_SHORT).show();
             navigateToDashboard();
         } else {
@@ -74,9 +68,6 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    private void handleSettingsClick() {
-        Toast.makeText(this, getString(R.string.test_settings), Toast.LENGTH_SHORT).show();
-    }
     private void showBiometricPrompt() {
         Executor executor = ContextCompat.getMainExecutor(this);
         BiometricPrompt biometricPrompt = new BiometricPrompt(LoginActivity.this,

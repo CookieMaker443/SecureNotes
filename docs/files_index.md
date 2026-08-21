@@ -1,0 +1,1 @@
+stessa funzione di [[notes_index]] ma dedicato ai media

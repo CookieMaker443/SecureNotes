@@ -4,16 +4,12 @@ plugins {
 
 android {
     namespace = "com.cookie.securenotes"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.cookie.securenotes"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -25,8 +21,15 @@ android {
             optimization {
                 enable = false
             }
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
+    
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -34,9 +37,11 @@ android {
 }
 
 dependencies {
-    implementation(libs.activity.ktx)
+    // UI e Base
     implementation(libs.appcompat)
+    implementation(libs.material)
     implementation(libs.constraintlayout)
+    implementation(libs.activity.ktx)
     implementation(libs.fragment)
     implementation(libs.material)
     testImplementation(libs.junit)
@@ -49,23 +54,28 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.2.2")
 
     // Lifecycle / ViewModel (MVVM)
-    implementation("androidx.lifecycle:lifecycle-viewmodel:2.11.0")
-    implementation("androidx.lifecycle:lifecycle-livedata:2.11.0")
+    implementation(libs.lifecycle.viewmodel)
+    implementation(libs.lifecycle.livedata)
 
-    // Room (database)
-    implementation("androidx.room:room-runtime:2.8.4")
-    annotationProcessor("androidx.room:room-compiler:2.8.4")
+    // Room (Database)
+    implementation(libs.room.runtime)
+    annotationProcessor(libs.room.compiler)
 
-    // SQLCipher (Room criptato)
-    implementation("net.zetetic:sqlcipher-android:4.17.0")
-    implementation("androidx.sqlite:sqlite:2.7.0")
+    // SQLCipher (Database Criptato)
+    implementation(libs.sqlcipher)
+    implementation(libs.sqlite)
 
-    // Jetpack Security (Keystore, EncryptedFile, EncryptedSharedPreferences)
-    implementation("androidx.security:security-crypto:1.1.0")
+    // Jetpack Security
+    implementation(libs.security.crypto)
 
     // Biometric
-    implementation("androidx.biometric:biometric:1.2.0-alpha05")
+    implementation(libs.biometric)
 
-    // WorkManager (backup pianificati)
-    implementation("androidx.work:work-runtime:2.11.2")
+    // WorkManager
+    implementation(libs.work.runtime)
+
+    // Testing
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.espresso.core)
+    androidTestImplementation(libs.ext.junit)
 }
