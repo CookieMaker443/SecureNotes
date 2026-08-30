@@ -20,10 +20,12 @@ public class CryptoManager {
     private static final String TRANSFORMATION = ALGORITHM + "/" + BLOCK_MODE + "/" + PADDING;
     private static final String KEY_ALIAS = "SecureNotesKey";
     private static final String ANDROID_KEYSTORE = "AndroidKeyStore";
+    private static final int GCM_IV_LENGTH = 12;
+    private static final int GCM_TAG_LENGTH_BITS = 128;
 
-    private KeyStore keyStore;
+    private final KeyStore keyStore;
 
-    public CryptoManager() {
+    public CryptoManager() throws CryptoException {
         try {
             keyStore = KeyStore.getInstance(ANDROID_KEYSTORE);
             keyStore.load(null);
@@ -31,7 +33,7 @@ public class CryptoManager {
                 generateKey();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new CryptoException("Impossibile inizializzare il Keystore", e);
         }
     }
 
@@ -42,7 +44,7 @@ public class CryptoManager {
                 KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
                 .setBlockModes(BLOCK_MODE)
                 .setEncryptionPaddings(PADDING)
-                .setUserAuthenticationRequired(false) // Può essere true per massima sicurezza
+                .setUserAuthenticationRequired(false) // TODO: punto aperto #1, vedi documento
                 .setRandomizedEncryptionRequired(true)
                 .build();
         keyGenerator.init(spec);
@@ -53,44 +55,66 @@ public class CryptoManager {
         return (SecretKey) keyStore.getKey(KEY_ALIAS, null);
     }
 
-    public String encrypt(String data) {
+    // ---- Famiglia 1: stringhe (note, metadati) — output Base64 ----
+
+    public String encryptToString(String data) throws CryptoException {
+        byte[] combined = encryptRaw(data.getBytes(StandardCharsets.UTF_8));
+        return Base64.encodeToString(combined, Base64.NO_WRAP);
+    }
+
+    public String decryptFromString(String encryptedDataWithIv) throws CryptoException {
+        byte[] combined = Base64.decode(encryptedDataWithIv, Base64.NO_WRAP);
+        byte[] plain = decryptRaw(combined);
+        return new String(plain, StandardCharsets.UTF_8);
+    }
+
+    // ---- Famiglia 2: byte[] puri (foto, video, PDF) — niente Base64 ----
+
+    public byte[] encrypt(byte[] data) throws CryptoException {
+        return encryptRaw(data);
+    }
+
+    public byte[] decrypt(byte[] encryptedDataWithIv) throws CryptoException {
+        return decryptRaw(encryptedDataWithIv);
+    }
+
+    // ---- Implementazione condivisa ----
+
+    private byte[] encryptRaw(byte[] data) throws CryptoException {
         try {
             Cipher cipher = Cipher.getInstance(TRANSFORMATION);
             cipher.init(Cipher.ENCRYPT_MODE, getSecretKey());
             byte[] iv = cipher.getIV();
-            byte[] encryptedData = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
-            
-            // Concateniamo IV e dati criptati per il salvataggio
+            byte[] encryptedData = cipher.doFinal(data);
+
             byte[] combined = new byte[iv.length + encryptedData.length];
             System.arraycopy(iv, 0, combined, 0, iv.length);
             System.arraycopy(encryptedData, 0, combined, iv.length, encryptedData.length);
-            
-            return Base64.encodeToString(combined, Base64.DEFAULT);
+            return combined;
         } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+            throw new CryptoException("Errore durante la cifratura", e);
         }
     }
 
-    public String decrypt(String encryptedDataWithIv) {
+    private byte[] decryptRaw(byte[] combined) throws CryptoException {
+        if (combined.length < GCM_IV_LENGTH) {
+            throw new CryptoException("Dati cifrati non validi (troppo corti)", null);
+        }
         try {
-            byte[] combined = Base64.decode(encryptedDataWithIv, Base64.DEFAULT);
-            
-            // IV per GCM è solitamente 12 byte
-            byte[] iv = new byte[12];
-            byte[] encryptedData = new byte[combined.length - 12];
-            System.arraycopy(combined, 0, iv, 0, 12);
-            System.arraycopy(combined, 12, encryptedData, 0, encryptedData.length);
+            byte[] iv = new byte[GCM_IV_LENGTH];
+            byte[] encryptedData = new byte[combined.length - GCM_IV_LENGTH];
+            System.arraycopy(combined, 0, iv, 0, GCM_IV_LENGTH);
+            System.arraycopy(combined, GCM_IV_LENGTH, encryptedData, 0, encryptedData.length);
 
             Cipher cipher = Cipher.getInstance(TRANSFORMATION);
-            GCMParameterSpec spec = new GCMParameterSpec(128, iv);
+            GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv);
             cipher.init(Cipher.DECRYPT_MODE, getSecretKey(), spec);
-            
-            byte[] decodedData = cipher.doFinal(encryptedData);
-            return new String(decodedData, StandardCharsets.UTF_8);
+
+            return cipher.doFinal(encryptedData);
         } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+            // Include il caso di manomissione: GCM lancia AEADBadTagException
+            // se i dati o l'IV sono stati alterati.
+            throw new CryptoException("Errore durante la decifratura (dati corrotti o manomessi?)", e);
         }
     }
 }
