@@ -12,7 +12,11 @@ import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
 
 import com.cookie.securenotes.R;
+import com.cookie.securenotes.data.local.prefs.SecurePrefsException;
 import com.cookie.securenotes.data.local.prefs.SecurePrefsManager;
+import com.cookie.securenotes.security.CryptoException;
+import com.cookie.securenotes.security.CryptoManager;
+import com.cookie.securenotes.session.SecureSession;
 import com.cookie.securenotes.ui.dashboard.DashboardActivity;
 
 import java.util.concurrent.Executor;
@@ -28,7 +32,13 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        prefsManager = new SecurePrefsManager(this);
+        try {
+            prefsManager = new SecurePrefsManager(this);
+        } catch (SecurePrefsException e) {
+            Toast.makeText(this, "Errore critico di sicurezza, impossibile continuare", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
 
         pinInput = findViewById(R.id.pinInput);
         loginButton = findViewById(R.id.loginButton);
@@ -54,17 +64,32 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
+        boolean loginOk;
         if (!prefsManager.hasPin()) {
             prefsManager.savePin(pin);
             prefsManager.setBiometricEnabled(true);
             Toast.makeText(this, getString(R.string.toast_pin_saved), Toast.LENGTH_SHORT).show();
-            navigateToDashboard();
+            loginOk = true;
         } else {
-            if (prefsManager.isPinCorrect(pin)) {
-                navigateToDashboard();
-            } else {
+            loginOk = prefsManager.isPinCorrect(pin);
+            if (!loginOk) {
                 Toast.makeText(this, getString(R.string.toast_incorrect_pin), Toast.LENGTH_SHORT).show();
             }
+        }
+
+        if (loginOk) {
+            unlockSessionAndProceed();
+        }
+    }
+
+    private void unlockSessionAndProceed() {
+        try {
+            CryptoManager cryptoManager = new CryptoManager();
+            SecureSession session = SecureSession.getInstance(cryptoManager);
+            session.unlock(getApplicationContext(), prefsManager);
+            navigateToDashboard();
+        } catch (CryptoException e) {
+            Toast.makeText(this, "Errore nello sblocco sicuro", Toast.LENGTH_LONG).show();
         }
     }
 
