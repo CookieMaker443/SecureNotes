@@ -15,3 +15,7 @@
 local.properties
 
 /docs/.obsidian
+
+*.jks
+*.keystore
+keystore.properties
