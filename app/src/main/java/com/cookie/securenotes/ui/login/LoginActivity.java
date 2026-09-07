@@ -16,6 +16,7 @@ import com.cookie.securenotes.data.local.prefs.SecurePrefsException;
 import com.cookie.securenotes.data.local.prefs.SecurePrefsManager;
 import com.cookie.securenotes.security.CryptoException;
 import com.cookie.securenotes.security.CryptoManager;
+import com.cookie.securenotes.session.LockManager;
 import com.cookie.securenotes.session.SecureSession;
 import com.cookie.securenotes.ui.dashboard.DashboardActivity;
 
@@ -40,12 +41,14 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
+        //setting of the UI elements
         pinInput = findViewById(R.id.pinInput);
         loginButton = findViewById(R.id.loginButton);
         Button biometricButton = findViewById(R.id.biometricButton);
 
         loginButton.setOnClickListener(v -> handlePinLogin());
         biometricButton.setOnClickListener(v -> showBiometricPrompt());
+
 
         if (!prefsManager.hasPin()) {
             Toast.makeText(this, getString(R.string.toast_set_new_pin), Toast.LENGTH_SHORT).show();
@@ -85,8 +88,9 @@ public class LoginActivity extends AppCompatActivity {
     private void unlockSessionAndProceed() {
         try {
             CryptoManager cryptoManager = new CryptoManager();
-            SecureSession session = SecureSession.getInstance(cryptoManager);
+            SecureSession session = SecureSession.init(cryptoManager);
             session.unlock(getApplicationContext(), prefsManager);
+            LockManager.getInstance().start(); // <-- avvia il monitoraggio timeout
             navigateToDashboard();
         } catch (CryptoException e) {
             Toast.makeText(this, "Errore nello sblocco sicuro", Toast.LENGTH_LONG).show();

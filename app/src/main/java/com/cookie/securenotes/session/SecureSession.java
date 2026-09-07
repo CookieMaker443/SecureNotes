@@ -23,9 +23,18 @@ public class SecureSession {
         this.cryptoManager = cryptoManager;
     }
 
-    public static synchronized SecureSession getInstance(CryptoManager cryptoManager) {
+    // dentro SecureSession
+
+    public static synchronized SecureSession init(CryptoManager cryptoManager) {
         if (instance == null) {
             instance = new SecureSession(cryptoManager);
+        }
+        return instance;
+    }
+
+    public static synchronized SecureSession getInstance() {
+        if (instance == null) {
+            throw new IllegalStateException("SecureSession non ancora inizializzata: chiama init() prima");
         }
         return instance;
     }

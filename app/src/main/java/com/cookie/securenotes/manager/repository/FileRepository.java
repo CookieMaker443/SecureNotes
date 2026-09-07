@@ -8,9 +8,9 @@ import com.cookie.securenotes.security.CryptoManager;
 import com.cookie.securenotes.session.SecureSession;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.UUID;
 
@@ -55,10 +55,8 @@ public class FileRepository {
         }
 
         File sorgente = new File(getDirByTipo(entry.tipo), entry.nomeFisico);
-        byte[] datiCifrati;
-        try (FileInputStream in = new FileInputStream(sorgente)) {
-            datiCifrati = in.readAllBytes();
-        }
+
+        byte[] datiCifrati = Files.readAllBytes(sorgente.toPath());
 
         return cryptoManager.decrypt(datiCifrati);
     }
