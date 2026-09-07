@@ -11,17 +11,14 @@
             "id": "fa99054e242743c3",
             "type": "leaf",
             "state": {
-              "type": "canvas",
+              "type": "markdown",
               "state": {
-                "file": "structure.canvas",
-                "viewState": {
-                  "x": 688.877383937791,
-                  "y": 1321.0703182524887,
-                  "zoom": -0.40000000000000013
-                }
+                "file": "Architettura/02-livello-sessione.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-layout-dashboard",
-              "title": "structure"
+              "icon": "lucide-file",
+              "title": "02-livello-sessione"
             }
           }
         ]
@@ -193,7 +190,17 @@
   },
   "active": "fa99054e242743c3",
   "lastOpenFiles": [
+    "Architettura/SecureNotes.canvas",
     "structure.canvas",
+    "Architettura/00-panoramica.md",
+    "Architettura/06-punti-aperti.md",
+    "Architettura/05-flussi-sequenze.md",
+    "Architettura/04-livello-repository.md",
+    "Architettura/03-livello-dati.md",
+    "Architettura/02-livello-sessione.md",
+    "Architettura/01-livello-sicurezza.md",
+    "Architettura",
+    "files.zip",
     "notes_index.md",
     "files_index.md",
     "Senza nome"
