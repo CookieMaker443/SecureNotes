@@ -28,4 +28,8 @@ public interface NoteDao {
 
     @Query("SELECT * FROM notes ORDER BY date_modify DESC")
     List<Nota> getAll();
+
+    // serve per la dashboard oper trvare le ultime X note
+    @Query("SELECT * FROM notes ORDER BY date_modify DESC LIMIT :limit")
+    List<Nota> getRecent(int limit);
 }

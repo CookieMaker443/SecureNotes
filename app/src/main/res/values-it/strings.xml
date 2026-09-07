@@ -1,15 +1,68 @@
 <resources>
-    <string name="hint_pin">Inserisci il PIN</string>
-    <string name="btn_use_biometrics">Usa scan biometrica</string>
-    <string name="dashboard_title">Dashboard</string>
-    <string name="toast_set_new_pin">Imposta un nuovo  PIN</string>
-    <string name="btn_set_pin">Imposta il PIN</string>
+    <!-- Generale -->
+    <string name="app_name" translatable="false">SecureNotes</string>
+
+    <!-- Login e Autenticazione -->
+    <string name="login_title" translatable="false">Secure Notes Login</string>
+    <string name="hint_pin">Inserisci PIN</string>
+    <string name="btn_login" translatable="false">Login</string>
+    <string name="btn_use_biometrics">Usa dati biometrici</string>
+    <string name="toast_set_new_pin">Imposta un nuovo PIN per continuare</string>
+    <string name="btn_set_pin">Imposta PIN</string>
     <string name="toast_enter_pin">Inserisci il PIN</string>
-    <string name="toast_pin_saved">PIN salvato</string>
+    <string name="toast_pin_saved">PIN salvato correttamente</string>
     <string name="toast_incorrect_pin">PIN errato</string>
-    <string name="auth_failed">Auth fallita</string>
-    <string name="biometric_prompt_title">Login biometrico</string>
-    <string name="biometric_prompt_subtitle">Login con credenziali biometriche</string>
-    <string name="biometric_prompt_negative_text">usa il PIN</string>
-    <string name="settings_button_description">Impostazioni</string>
+    <string name="auth_error_prefix" translatable="false">Errore di autenticazione: %1$s</string>
+    <string name="auth_failed">Autenticazione non riuscita</string>
+    <string name="biometric_prompt_title">Sblocca SecureNotes</string>
+    <string name="biometric_prompt_subtitle">Usa la tua impronta o il tuo volto</string>
+    <string name="biometric_prompt_negative_text">Usa il PIN</string>
+
+    <!-- Dashboard e Impostazioni -->
+    <string name="dashboard_title">Schermata Principale</string>
+    <string name="settings_title">Impostazioni</string>
+    <string name="label_new_pin">Nuovo PIN</string>
+    <string name="label_pause_time">Tempo di pausa blocco (min)</string>
+    <string name="btn_save_settings">Salva impostazioni</string>
+    <string name="toast_settings_saved">Impostazioni salvate</string>
+    <string name="dashboard_button_notes">Note</string>
+    <string name="dashboard_button_archivio">Archivio</string>
+    <string name="dashboard_recent_notes_label">Note recenti</string>
+    <string name="action_settings">Impostazioni</string>
+
+    <string name="settings_section_timeout">Timeout inattività</string>
+    <string name="settings_section_dashboard">Dashboard</string>
+    <string name="settings_section_pin">Cambia PIN</string>
+    <string name="settings_section_backup">Backup</string>
+    <string name="hint_timeout_minutes">Minuti (3–30)</string>
+    <string name="hint_recent_notes_count">Numero note recenti in dashboard</string>
+    <string name="hint_new_pin">Nuovo PIN</string>
+    <string name="hint_confirm_pin">Conferma nuovo PIN</string>
+    <string name="action_verify_biometric">Verifica identità con biometria</string>
+    <string name="action_export_backup">Esporta backup criptato</string>
+    <string name="biometric_change_pin_subtitle">Conferma la tua identità per cambiare il PIN</string>
+    <string name="toast_biometric_verified">Identità verificata, ora puoi impostare un nuovo PIN</string>
+    <string name="toast_settings_init_error">Errore critico di sicurezza</string>
+    <string name="toast_backup_not_ready">Funzione non ancora disponibile</string>
+    <string name="error_invalid_number">Inserisci un numero valido</string>
+    <string name="error_pin_required">Inserisci il nuovo PIN</string>
+    <string name="error_pin_mismatch">I due PIN non coincidono</string>
+
+    <!-- Note: Dialog di eliminazione -->
+    <string name="dialog_delete_title">Elimina nota</string>
+    <string name="dialog_delete_message">Questa azione è irreversibile. Vuoi continuare?</string>
+    <string name="action_delete">Elimina</string>
+    <string name="action_cancel">Annulla</string>
+
+    <!-- Note: Gestione -->
+    <string name="title_notes">Note</string>
+    <string name="title_new_note">Nuova nota</string>
+    <string name="title_edit_note">Modifica nota</string>
+    <string name="hint_note_title">Titolo</string>
+    <string name="hint_note_content">Scrivi qui…</string>
+    <string name="hint_search_notes">Cerca note</string>
+    <string name="empty_notes_message">Nessuna nota trovata</string>
+    <string name="action_add_note">Aggiungi nota</string>
+    <string name="action_save">Salva</string>
+    <string name="error_title_required">Il titolo è obbligatorio</string>
 </resources>

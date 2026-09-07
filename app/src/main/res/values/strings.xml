@@ -1,23 +1,70 @@
 <resources>
+    <!-- General -->
     <string name="app_name" translatable="false">SecureNotes</string>
+
+    <!-- Login & Auth -->
     <string name="login_title" translatable="false">Secure Notes Login</string>
     <string name="hint_pin">Enter PIN</string>
     <string name="btn_login" translatable="false">Login</string>
     <string name="btn_use_biometrics">Use Biometrics</string>
-    <string name="dashboard_title">Dashboard Screen</string>
-    <string name="toast_set_new_pin">Set a new PIN</string>
+    <string name="toast_set_new_pin">Set a new PIN to continue</string>
     <string name="btn_set_pin">Set PIN</string>
-    <string name="toast_enter_pin">Please enter PIN</string>
-    <string name="toast_pin_saved">PIN Saved</string>
+    <string name="toast_enter_pin">Please enter the PIN</string>
+    <string name="toast_pin_saved">PIN saved successfully</string>
     <string name="toast_incorrect_pin">Incorrect PIN</string>
     <string name="auth_error_prefix" translatable="false">Auth error: %1$s</string>
     <string name="auth_failed">Auth failed</string>
-    <string name="biometric_prompt_title">Biometric Login</string>
-    <string name="biometric_prompt_subtitle">Log in using your biometric credential</string>
+    <string name="biometric_prompt_title">Unlock SecureNotes</string>
+    <string name="biometric_prompt_subtitle">Use your fingerprint or face</string>
     <string name="biometric_prompt_negative_text">Use PIN</string>
+
+    <!-- Dashboard & Settings -->
+    <string name="dashboard_title">Dashboard Screen</string>
     <string name="settings_title">Settings</string>
     <string name="label_new_pin">New PIN</string>
     <string name="label_pause_time">Lock Pause Time (min)</string>
     <string name="btn_save_settings">Save Settings</string>
     <string name="toast_settings_saved">Settings Saved</string>
+    <string name="dashboard_button_notes">Notes</string>
+    <string name="dashboard_button_archivio">Archive</string>
+    <string name="dashboard_recent_notes_label">Last notes</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="settings_section_timeout">Timeout inactivity</string>
+    <string name="settings_section_dashboard">Dashboard</string>
+    <string name="settings_section_pin">Change PIN</string>
+    <string name="settings_section_backup">Backup</string>
+    <string name="hint_timeout_minutes">Minutes (3–30)</string>
+    <string name="hint_recent_notes_count">Number of recent notes in dashboard</string>
+    <string name="hint_new_pin">New PIN</string>
+    <string name="hint_confirm_pin">Confirm new PIN</string>
+    <string name="action_verify_biometric">Verify biometric identity</string>
+    <string name="action_export_backup">Export encrypted backup</string>
+    <string name="biometric_change_pin_subtitle">Confirm your identity to change the PIN</string>
+    <string name="toast_biometric_verified">Biometric identity verified, now you can set a new PIN</string>
+    <string name="toast_settings_init_error">Critical security error</string>
+    <string name="toast_backup_not_ready">Function not yet available</string>
+    <string name="error_invalid_number">Enter a valid number</string>
+    <string name="error_pin_required">Enter the new PIN</string>
+    <string name="error_pin_mismatch">The two PINs do not match</string>
+
+    <!-- Notes: Delete Dialog -->
+    <string name="dialog_delete_title">Delete note</string>
+    <string name="dialog_delete_message">This action cannot be undone. Do you want to continue?</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
+
+    <!-- Notes: Management -->
+    <string name="title_notes">Notes</string>
+    <string name="title_new_note">New note</string>
+    <string name="title_edit_note">Edit note</string>
+    <string name="hint_note_title">Title</string>
+    <string name="hint_note_content">Type here…</string>
+    <string name="hint_search_notes">Search notes</string>
+    <string name="empty_notes_message">No notes found</string>
+    <string name="action_add_note">Add note</string>
+    <string name="action_save">Save</string>
+    <string name="error_title_required">Title is required</string>
+
+
 </resources>
