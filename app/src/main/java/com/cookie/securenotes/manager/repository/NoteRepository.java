@@ -81,4 +81,8 @@ public class NoteRepository {
 
         noteDao.delete(nota);
     }
+
+    public List<Nota> getRecentNotes(int limit) {
+        return noteDao.getRecent(limit);
+    }
 }
