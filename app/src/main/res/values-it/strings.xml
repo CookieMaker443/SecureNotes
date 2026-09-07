@@ -64,5 +64,7 @@
     <string name="empty_notes_message">Nessuna nota trovata</string>
     <string name="action_add_note">Aggiungi nota</string>
     <string name="action_save">Salva</string>
-    <string name="error_title_required">Il titolo è obbligatorio</string>
+    <string name="error_title_required">Il titolo è obbligatorio</string>>
+    <string name="hint_enroll_biometric">Crea identità biometrica</string>
+
 </resources>

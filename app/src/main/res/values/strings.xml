@@ -65,6 +65,7 @@
     <string name="action_add_note">Add note</string>
     <string name="action_save">Save</string>
     <string name="error_title_required">Title is required</string>
+    <string name="hint_enroll_biometric">Create biometric identity</string>
 
 
 </resources>

@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="24dp"
     tools:context=".ui.login.LoginActivity">
 
     <TextView
@@ -11,43 +12,70 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/login_title"
-        android:textSize="24sp"
-        app:layout_constraintBottom_toTopOf="@+id/pinInput"
+        android:textAppearance="?attr/textAppearanceHeadlineSmall"
+        app:layout_constraintBottom_toTopOf="@id/pinInputLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="packed" />
 
-    <EditText
-        android:id="@+id/pinInput"
-        android:layout_width="wrap_content"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/pinInputLayout"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:ems="10"
+        android:layout_marginTop="32dp"
         android:hint="@string/hint_pin"
-        android:inputType="numberPassword"
-        app:layout_constraintBottom_toTopOf="@+id/loginButton"
+        app:layout_constraintBottom_toTopOf="@id/loginButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
+        app:layout_constraintTop_toBottomOf="@id/textView">
 
-    <Button
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/pinInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:inputType="numberPassword"
+            android:maxLength="6"
+            android:textSize="20sp" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/loginButton"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:text="@string/btn_login"
-        app:layout_constraintBottom_toTopOf="@+id/biometricButton"
+        app:layout_constraintBottom_toTopOf="@id/biometricButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pinInput" />
+        app:layout_constraintTop_toBottomOf="@id/pinInputLayout" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/biometricButton"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="@string/btn_use_biometrics"
+        app:layout_constraintBottom_toTopOf="@id/enrollBiometricHint"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/loginButton" />
+
+    <TextView
+        android:id="@+id/enrollBiometricHint"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/btn_use_biometrics"
+        android:layout_marginTop="12dp"
+        android:text="@string/hint_enroll_biometric"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/loginButton" />
+        app:layout_constraintTop_toBottomOf="@id/biometricButton" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

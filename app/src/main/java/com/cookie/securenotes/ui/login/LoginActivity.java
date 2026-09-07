@@ -12,6 +12,7 @@ import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
 
 import com.cookie.securenotes.R;
+import com.cookie.securenotes.data.local.prefs.AppSettings;
 import com.cookie.securenotes.data.local.prefs.SecurePrefsException;
 import com.cookie.securenotes.data.local.prefs.SecurePrefsManager;
 import com.cookie.securenotes.security.CryptoException;
@@ -90,7 +91,10 @@ public class LoginActivity extends AppCompatActivity {
             CryptoManager cryptoManager = new CryptoManager();
             SecureSession session = SecureSession.init(cryptoManager);
             session.unlock(getApplicationContext(), prefsManager);
+
             LockManager.getInstance().start(); // <-- avvia il monitoraggio timeout
+            LockManager.getInstance().setTimeoutMinutes(new AppSettings(this).getTimeoutMinutes());
+
             navigateToDashboard();
         } catch (CryptoException e) {
             Toast.makeText(this, "Errore nello sblocco sicuro", Toast.LENGTH_LONG).show();
