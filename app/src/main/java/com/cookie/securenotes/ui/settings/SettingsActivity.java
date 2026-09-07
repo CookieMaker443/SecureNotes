@@ -8,7 +8,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.cookie.securenotes.R;
-import com.cookie.securenotes.manager.LockManager;
+import com.cookie.securenotes.session.LockManager;
 
 public class SettingsActivity extends AppCompatActivity {
 
