@@ -23,9 +23,9 @@ public interface NoteDao {
     @Query("SELECT * FROM notes WHERE id = :id")
     Nota getById(long id);
 
-    @Query("SELECT * FROM notes WHERE titolo LIKE '%' || :query || '%' ORDER BY data_modifica DESC")
+    @Query("SELECT * FROM notes WHERE title LIKE '%' || :query || '%' ORDER BY date_modify DESC")
     List<Nota> search(String query);
 
-    @Query("SELECT * FROM notes ORDER BY data_modifica DESC")
+    @Query("SELECT * FROM notes ORDER BY date_modify DESC")
     List<Nota> getAll();
 }

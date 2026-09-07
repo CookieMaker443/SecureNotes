@@ -19,9 +19,9 @@ public interface FileDao {
     @Query("SELECT * FROM files WHERE id = :id")
     FileEntry getById(long id);
 
-    @Query("SELECT * FROM files WHERE tipo = :tipo AND nome_originale LIKE '%' || :query || '%' ORDER BY data_creazione DESC")
+    @Query("SELECT * FROM files WHERE type = :tipo AND file_name LIKE '%' || :query || '%' ORDER BY creation_date DESC")
     List<FileEntry> search(String tipo, String query);
 
-    @Query("SELECT * FROM files WHERE tipo = :tipo ORDER BY data_creazione DESC")
+    @Query("SELECT * FROM files WHERE type = :tipo ORDER BY creation_date DESC")
     List<FileEntry> getAllByTipo(String tipo);
 }
