@@ -10,15 +10,15 @@ public class Nota {
     @PrimaryKey(autoGenerate = true)
     public long id;
 
-    @ColumnInfo(name = "titolo")
+    @ColumnInfo(name = "title")
     public String titolo; // in chiaro, serve per la ricerca LIKE
 
-    @ColumnInfo(name = "nome_fisico")
+    @ColumnInfo(name = "name_on_disk")
     public String nomeFisico; // UUID.toString(), nome reale del file in Media/Notes/
 
-    @ColumnInfo(name = "data_creazione")
+    @ColumnInfo(name = "date_creation")
     public long dataCreazione;
 
-    @ColumnInfo(name = "data_modifica")
+    @ColumnInfo(name = "date_modify")
     public long dataModifica;
 }

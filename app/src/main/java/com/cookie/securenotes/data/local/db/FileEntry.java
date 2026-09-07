@@ -10,18 +10,18 @@ public class FileEntry {
     @PrimaryKey(autoGenerate = true)
     public long id;
 
-    @ColumnInfo(name = "nome_originale")
+    @ColumnInfo(name = "file_name")
     public String nomeOriginale; // es. "gatto.png", in chiaro solo qui nell'indice cifrato
 
-    @ColumnInfo(name = "nome_fisico")
+    @ColumnInfo(name = "name_on_disk")
     public String nomeFisico; // UUID.toString(), nome reale del file su disco
 
-    @ColumnInfo(name = "tipo")
+    @ColumnInfo(name = "type")
     public String tipo; // "foto" | "video" | "pdf"
 
-    @ColumnInfo(name = "dimensione_byte")
+    @ColumnInfo(name = "dimension_byte")
     public long dimensioneByte;
 
-    @ColumnInfo(name = "data_creazione")
+    @ColumnInfo(name = "creation_date")
     public long dataCreazione;
 }
