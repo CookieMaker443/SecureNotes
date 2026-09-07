@@ -59,6 +59,11 @@ public class NoteRepository {
         return noteDao.search(query);
     }
 
+    public String getTitolo(long id) {
+        Nota nota = noteDao.getById(id);
+        return nota != null ? nota.titolo : null;
+    }
+
     public List<Nota> getAllNote() {
         return noteDao.getAll();
     }
