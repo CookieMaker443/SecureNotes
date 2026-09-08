@@ -40,6 +40,9 @@
             android:name=".ui.notes.NoteEditorActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.archivio.ArchivioActivity"
+            android:exported="false" />
 
     </application>
 

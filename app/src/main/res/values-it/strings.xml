@@ -48,6 +48,15 @@
     <string name="error_pin_required">Inserisci il nuovo PIN</string>
     <string name="error_pin_mismatch">I due PIN non coincidono</string>
 
+    <!-- Archivio -->
+    <string name="title_archivio">Archivio</string>
+    <string name="tab_foto">Foto</string>
+    <string name="tab_video">Video</string>
+    <string name="tab_pdf">PDF</string>
+    <string name="hint_search_files">Cerca file</string>
+    <string name="action_add_file">Aggiungi file</string>
+    <string name="dialog_delete_file_title">Elimina file</string>
+
     <!-- Note: Dialog di eliminazione -->
     <string name="dialog_delete_title">Elimina nota</string>
     <string name="dialog_delete_message">Questa azione è irreversibile. Vuoi continuare?</string>

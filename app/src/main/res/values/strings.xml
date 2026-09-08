@@ -48,6 +48,15 @@
     <string name="error_pin_required">Enter the new PIN</string>
     <string name="error_pin_mismatch">The two PINs do not match</string>
 
+    <!-- Archivio -->
+    <string name="title_archivio">Archive</string>
+    <string name="tab_foto">Foto</string>
+    <string name="tab_video">Video</string>
+    <string name="tab_pdf">PDF</string>
+    <string name="hint_search_files">Search file</string>
+    <string name="action_add_file">Add file</string>
+    <string name="dialog_delete_file_title">Delete file</string>
+
     <!-- Notes: Delete Dialog -->
     <string name="dialog_delete_title">Delete note</string>
     <string name="dialog_delete_message">This action cannot be undone. Do you want to continue?</string>

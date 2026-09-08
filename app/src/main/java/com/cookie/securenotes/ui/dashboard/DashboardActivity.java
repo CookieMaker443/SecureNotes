@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.cookie.securenotes.R;
 import com.cookie.securenotes.data.local.db.Nota;
 import com.cookie.securenotes.data.local.prefs.AppSettings;
+import com.cookie.securenotes.ui.archivio.ArchivioActivity;
 import com.cookie.securenotes.ui.common.BaseActivity;
 import com.cookie.securenotes.ui.notes.NoteAdapter;
 import com.cookie.securenotes.ui.notes.NoteEditorActivity;
@@ -33,9 +34,8 @@ public class DashboardActivity extends BaseActivity {
         findViewById(R.id.buttonNotes).setOnClickListener(v ->
                 startActivity(new Intent(this, NotesListActivity.class)));
 
-        findViewById(R.id.buttonArchivio).setOnClickListener(v -> {
-            // TODO: collegare ArchivioActivity quando sarà pronta
-        });
+        findViewById(R.id.buttonArchivio).setOnClickListener(v ->
+                startActivity(new Intent(this, ArchivioActivity.class)));
 
         ImageButton settingsBtn = findViewById(R.id.imageButton);
         settingsBtn.setOnClickListener(v ->
