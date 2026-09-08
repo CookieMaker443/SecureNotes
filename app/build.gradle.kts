@@ -47,6 +47,8 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.ext.junit)
+
+    implementation(libs.viewpager2)
     // AndroidX base
 
     implementation("androidx.appcompat:appcompat:1.7.1")
