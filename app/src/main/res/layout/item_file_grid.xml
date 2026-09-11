@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="2dp">
+
+    <ImageView
+        android:id="@+id/thumbnailImage"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scaleType="centerCrop"
+        android:background="?attr/colorSurfaceVariant"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageView
+        android:id="@+id/videoPlayIcon"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:src="@android:drawable/ic_media_play"
+        android:visibility="gone"
+        app:tint="@android:color/white"
+        app:layout_constraintTop_toTopOf="@id/thumbnailImage"
+        app:layout_constraintBottom_toBottomOf="@id/thumbnailImage"
+        app:layout_constraintStart_toStartOf="@id/thumbnailImage"
+        app:layout_constraintEnd_toEndOf="@id/thumbnailImage" />
+
+    <TextView
+        android:id="@+id/fileNameOverlay"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="#80000000"
+        android:textColor="@android:color/white"
+        android:textSize="11sp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:padding="4dp"
+        app:layout_constraintStart_toStartOf="@id/thumbnailImage"
+        app:layout_constraintEnd_toEndOf="@id/thumbnailImage"
+        app:layout_constraintBottom_toBottomOf="@id/thumbnailImage" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

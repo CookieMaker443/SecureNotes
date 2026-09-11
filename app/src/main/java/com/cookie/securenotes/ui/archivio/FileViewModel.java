@@ -2,8 +2,11 @@ package com.cookie.securenotes.ui.archivio;
 
 import android.content.ContentResolver;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.OpenableColumns;
+import android.util.LruCache;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -21,11 +24,23 @@ import java.util.List;
 
 public class FileViewModel extends ViewModel {
 
+    private static final int THUMBNAIL_TARGET_SIZE_PX = 200;
+
     private final FileRepository repository;
     private final AppExecutors executors;
 
     private final MutableLiveData<List<FileEntry>> files = new MutableLiveData<>();
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
+
+    // Cache in RAM delle miniature già decifrate. Dimensione ~1/8 dell'heap disponibile,
+    // criterio standard consigliato da Android per LruCache di immagini.
+    private final LruCache<Long, Bitmap> thumbnailCache = new LruCache<Long, Bitmap>(
+            (int) (Runtime.getRuntime().maxMemory() / 1024 / 8)) {
+        @Override
+        protected int sizeOf(Long key, Bitmap bitmap) {
+            return bitmap.getByteCount() / 1024;
+        }
+    };
 
     public FileViewModel() {
         this.repository = new FileRepository(SecureSession.getInstance());
@@ -69,12 +84,56 @@ public class FileViewModel extends ViewModel {
         executors.diskIO().execute(() -> {
             try {
                 repository.deleteFile(id);
+                thumbnailCache.remove(id); // evita di tenere in RAM una miniatura di un file ormai cancellato
                 loadFiles(tipo);
             } catch (IOException e) {
                 executors.mainThread(() ->
                         errorMessage.setValue("Errore nell'eliminazione: " + e.getMessage()));
             }
         });
+    }
+
+    /** Solo per foto: decifra, ridimensiona e mette in cache la miniatura. */
+    public void loadThumbnail(FileEntry entry, FileGridAdapter.ThumbnailReadyCallback callback) {
+        Bitmap cached = thumbnailCache.get(entry.id);
+        if (cached != null) {
+            callback.onReady(cached);
+            return;
+        }
+
+        executors.diskIO().execute(() -> {
+            Bitmap bitmap = null;
+            try {
+                byte[] datiInChiaro = repository.loadFile(entry.id);
+                bitmap = decodeSampledBitmap(datiInChiaro, THUMBNAIL_TARGET_SIZE_PX);
+                if (bitmap != null) {
+                    thumbnailCache.put(entry.id, bitmap);
+                }
+            } catch (Exception e) {
+                // Errore silenzioso qui apposta: se una singola miniatura fallisce,
+                // meglio un placeholder vuoto che un Toast per ogni riga della griglia.
+            }
+            Bitmap finalBitmap = bitmap;
+            executors.mainThread(() -> callback.onReady(finalBitmap));
+        });
+    }
+
+    /** Decodifica un'immagine ridotta, evitando di caricare la risoluzione piena solo per una miniatura. */
+    private Bitmap decodeSampledBitmap(byte[] data, int targetSizePx) {
+        BitmapFactory.Options boundsOptions = new BitmapFactory.Options();
+        boundsOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeByteArray(data, 0, data.length, boundsOptions);
+
+        int sampleSize = 1;
+        int halfWidth = boundsOptions.outWidth / 2;
+        int halfHeight = boundsOptions.outHeight / 2;
+        while ((halfWidth / sampleSize) >= targetSizePx && (halfHeight / sampleSize) >= targetSizePx) {
+            sampleSize *= 2;
+        }
+
+        BitmapFactory.Options decodeOptions = new BitmapFactory.Options();
+        decodeOptions.inSampleSize = sampleSize;
+        return BitmapFactory.decodeByteArray(data, 0, data.length, decodeOptions);
     }
 
     private String queryDisplayName(ContentResolver resolver, Uri uri) {

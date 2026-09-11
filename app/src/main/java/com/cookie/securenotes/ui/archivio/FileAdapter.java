@@ -14,12 +14,8 @@ import com.cookie.securenotes.data.local.db.FileEntry;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FileAdapter extends RecyclerView.Adapter<FileAdapter.FileViewHolder> {
-
-    public interface OnFileClickListener {
-        void onFileClick(FileEntry fileEntry);
-        void onFileLongClick(FileEntry fileEntry);
-    }
+public class FileAdapter extends RecyclerView.Adapter<FileAdapter.FileViewHolder> implements FilesAdapter
+{
 
     private final List<FileEntry> items = new ArrayList<>();
     private final OnFileClickListener listener;

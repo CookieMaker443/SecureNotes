@@ -16,12 +16,14 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cookie.securenotes.R;
 import com.cookie.securenotes.data.local.db.FileEntry;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.cookie.securenotes.ui.archivio.OnFileClickListener;
 
 public abstract class BaseFileListFragment extends Fragment {
 
@@ -51,7 +53,8 @@ public abstract class BaseFileListFragment extends Fragment {
         viewModel = new ViewModelProvider(this).get(FileViewModel.class);
 
         RecyclerView recyclerView = view.findViewById(R.id.filesRecyclerView);
-        FileAdapter adapter = new FileAdapter(new FileAdapter.OnFileClickListener() {
+
+        OnFileClickListener clickListener = new OnFileClickListener() {
             @Override
             public void onFileClick(FileEntry fileEntry) {
                 // TODO: aprire un visualizzatore dedicato (immagine/video/PDF)
@@ -61,9 +64,21 @@ public abstract class BaseFileListFragment extends Fragment {
             public void onFileLongClick(FileEntry fileEntry) {
                 confirmDelete(fileEntry.id);
             }
-        });
-        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        recyclerView.setAdapter(adapter);
+        };
+
+        final FilesAdapter filesAdapter;
+        if (useGridLayout()) {
+            recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), gridSpanCount()));
+            FileGridAdapter gridAdapter = new FileGridAdapter(clickListener,
+                    (entry, callback) -> viewModel.loadThumbnail(entry, callback));
+            recyclerView.setAdapter(gridAdapter);
+            filesAdapter = gridAdapter;
+        } else {
+            recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+            FileAdapter listAdapter = new FileAdapter(clickListener);
+            recyclerView.setAdapter(listAdapter);
+            filesAdapter = listAdapter;
+        }
 
         EditText searchInput = view.findViewById(R.id.searchInput);
         searchInput.addTextChangedListener(new TextWatcher() {
@@ -77,7 +92,7 @@ public abstract class BaseFileListFragment extends Fragment {
         FloatingActionButton addButton = view.findViewById(R.id.addFileButton);
         addButton.setOnClickListener(v -> filePickerLauncher.launch(getMimeTypes()));
 
-        viewModel.getFiles().observe(getViewLifecycleOwner(), adapter::submitList);
+        viewModel.getFiles().observe(getViewLifecycleOwner(), filesAdapter::submitList);
         viewModel.getErrorMessage().observe(getViewLifecycleOwner(), msg -> {
             if (msg != null) Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show();
         });
@@ -98,4 +113,7 @@ public abstract class BaseFileListFragment extends Fragment {
                 .setNegativeButton(getString(R.string.action_cancel), null)
                 .show();
     }
+
+    protected boolean useGridLayout() { return false; }
+    protected int gridSpanCount() { return 3; }
 }
