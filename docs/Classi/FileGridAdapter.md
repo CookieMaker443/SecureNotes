@@ -1,0 +1,2 @@
+
+Il controllo `currentPos != NO_POSITION && items.get(currentPos).id == boundEntryId` è il punto più delicato: `RecyclerView` **ricicla** gli holder per efficienza — mentre la miniatura della riga 3 sta ancora decifrando in background, quell'holder potrebbe già essere stato riassegnato alla riga 20 (scroll veloce). Senza questo controllo, vedresti per un istante la miniatura sbagliata comparire nel posto sbagliato.
