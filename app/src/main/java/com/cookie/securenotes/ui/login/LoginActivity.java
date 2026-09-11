@@ -28,6 +28,7 @@ public class LoginActivity extends AppCompatActivity {
     private SecurePrefsManager prefsManager;
     private EditText pinInput;
     private Button loginButton;
+    Button biometricButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +46,7 @@ public class LoginActivity extends AppCompatActivity {
         //setting of the UI elements
         pinInput = findViewById(R.id.pinInput);
         loginButton = findViewById(R.id.loginButton);
-        Button biometricButton = findViewById(R.id.biometricButton);
+        biometricButton = findViewById(R.id.biometricButton);
 
         loginButton.setOnClickListener(v -> handlePinLogin());
         biometricButton.setOnClickListener(v -> showBiometricPrompt());
@@ -86,21 +87,6 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    private void unlockSessionAndProceed() {
-        try {
-            CryptoManager cryptoManager = new CryptoManager();
-            SecureSession session = SecureSession.init(cryptoManager);
-            session.unlock(getApplicationContext(), prefsManager);
-
-            LockManager.getInstance().start(); // <-- avvia il monitoraggio timeout
-            LockManager.getInstance().setTimeoutMinutes(new AppSettings(this).getTimeoutMinutes());
-
-            navigateToDashboard();
-        } catch (CryptoException e) {
-            Toast.makeText(this, "Errore nello sblocco sicuro", Toast.LENGTH_LONG).show();
-        }
-    }
-
     private void showBiometricPrompt() {
         Executor executor = ContextCompat.getMainExecutor(this);
         BiometricPrompt biometricPrompt = new BiometricPrompt(LoginActivity.this,
@@ -114,7 +100,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
                 super.onAuthenticationSucceeded(result);
-                navigateToDashboard();
+                unlockSessionAndProceed();
             }
 
             @Override
@@ -137,5 +123,20 @@ public class LoginActivity extends AppCompatActivity {
         Intent intent = new Intent(this, DashboardActivity.class);
         startActivity(intent);
         finish();
+    }
+
+    private void unlockSessionAndProceed() {
+        try {
+            CryptoManager cryptoManager = new CryptoManager();
+            SecureSession session = SecureSession.init(cryptoManager);
+            session.unlock(getApplicationContext(), prefsManager);
+
+            LockManager.getInstance().start(); // <-- avvia il monitoraggio timeout
+            LockManager.getInstance().setTimeoutMinutes(new AppSettings(this).getTimeoutMinutes());
+
+            navigateToDashboard();
+        } catch (CryptoException e) {
+            Toast.makeText(this, "Errore nello sblocco sicuro", Toast.LENGTH_LONG).show();
+        }
     }
 }
