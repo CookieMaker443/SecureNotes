@@ -12,6 +12,11 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 
+import javax.crypto.CipherInputStream;
+import java.io.InputStream;
+import java.io.IOException;
+
+
 public class CryptoManager {
 
     private static final String ALGORITHM = KeyProperties.KEY_ALGORITHM_AES;
@@ -115,6 +120,34 @@ public class CryptoManager {
             // Include il caso di manomissione: GCM lancia AEADBadTagException
             // se i dati o l'IV sono stati alterati.
             throw new CryptoException("Errore durante la decifratura (dati corrotti o manomessi?)", e);
+        }
+    }
+
+    // ---- Famiglia 3: streaming (video) — decifratura sequenziale ----
+
+    /**
+     * Apre uno stream in chiaro a partire da uno stream cifrato (formato: IV(12) || ciphertext+tag).
+     * Legge in modo sequenziale in avanti; non supporta random-access all'indietro.
+     */
+    public InputStream decryptStream(InputStream encryptedIn) throws CryptoException {
+        try {
+            byte[] iv = new byte[GCM_IV_LENGTH];
+            int read = 0;
+            while (read < GCM_IV_LENGTH) {
+                int n = encryptedIn.read(iv, read, GCM_IV_LENGTH - read);
+                if (n == -1) throw new CryptoException("File cifrato troncato: IV incompleto", null);
+                read += n;
+            }
+
+            Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+            GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv);
+            cipher.init(Cipher.DECRYPT_MODE, getSecretKey(), spec);
+
+            return new CipherInputStream(encryptedIn, cipher);
+        } catch (CryptoException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CryptoException("Errore nell'apertura dello stream cifrato", e);
         }
     }
 }

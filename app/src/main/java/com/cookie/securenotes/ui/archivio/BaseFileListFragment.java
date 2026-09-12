@@ -27,6 +27,7 @@ import com.cookie.securenotes.data.local.db.FileEntry;
 import com.cookie.securenotes.ui.viewer.ImageViewerActivity;
 import com.cookie.securenotes.ui.viewer.PdfViewerActivity;
 import com.cookie.securenotes.ui.viewer.SecureViewerActivity;
+import com.cookie.securenotes.ui.viewer.VideoPlayerActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.cookie.securenotes.ui.archivio.OnFileClickListener;
 
@@ -62,18 +63,16 @@ public abstract class BaseFileListFragment extends Fragment {
         OnFileClickListener clickListener = new OnFileClickListener() {
             @Override
             public void onFileClick(FileEntry fileEntry) {
-                public void onFileClick(FileEntry fileEntry) {
-                    Class<?> target;
-                    switch (fileEntry.tipo) {
-                        case "foto": target = ImageViewerActivity.class; break;
-                        case "video": target = VideoPlayerActivity.class; break;
-                        case "pdf":   target = PdfViewerActivity.class; break;
-                        default: return;
-                    }
-                    Intent intent = new Intent(requireContext(), target);
-                    intent.putExtra(SecureViewerActivity.EXTRA_FILE_ID, fileEntry.id);
-                    startActivity(intent);
+                Class<?> target;
+                switch (fileEntry.tipo) {
+                    case "foto": target = ImageViewerActivity.class; break;
+                    case "video": target = VideoPlayerActivity.class; break;
+                    case "pdf":   target = PdfViewerActivity.class; break;
+                    default: return;
                 }
+                Intent intent = new Intent(requireContext(), target);
+                intent.putExtra(SecureViewerActivity.EXTRA_FILE_ID, fileEntry.id);
+                startActivity(intent);
             }
 
             @Override

@@ -93,4 +93,8 @@ public class FileRepository {
             default: throw new IllegalArgumentException("Tipo file sconosciuto: " + tipo);
         }
     }
+
+    public FileEntry getById(long fileEntryId) {
+        return fileDao.getById(fileEntryId);
+    }
 }

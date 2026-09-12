@@ -44,6 +44,9 @@
             android:name=".ui.archivio.ArchivioActivity"
             android:exported="false" />
 
+        <activity android:name=".ui.viewer.ImageViewerActivity" android:exported="false" />
+        <activity android:name=".ui.viewer.VideoPlayerActivity" android:exported="false" />
+        <activity android:name=".ui.viewer.PdfViewerActivity" android:exported="false" />
     </application>
 
 </manifest>
