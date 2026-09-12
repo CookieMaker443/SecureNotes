@@ -29,7 +29,7 @@ android {
             )
         }
     }
-    
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -43,17 +43,8 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.activity.ktx)
     implementation(libs.fragment)
-    implementation(libs.material)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.espresso.core)
-    androidTestImplementation(libs.ext.junit)
 
     implementation(libs.viewpager2)
-    // AndroidX base
-
-    implementation("androidx.appcompat:appcompat:1.7.1")
-    implementation("com.google.android.material:material:1.14.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.2.2")
 
     // Lifecycle / ViewModel (MVVM)
     implementation(libs.lifecycle.viewmodel)
@@ -75,6 +66,14 @@ dependencies {
 
     // WorkManager
     implementation(libs.work.runtime)
+
+    // Media3/ExoPlayer: motore di riproduzione video, sostituisce VideoView perché
+    // supporta un DataSource personalizzato (necessario per lo streaming decifrato al volo)
+    implementation(libs.media3.exoplayer)
+    // Media3 UI: PlayerView (superficie video) e controlli di riproduzione pronti all'uso
+    implementation(libs.media3.ui)
+    // Media3 DataSource: classi base (BaseDataSource, DataSpec) usate da EncryptedFileDataSource
+    implementation(libs.media3.datasource)
 
     // Testing
     testImplementation(libs.junit)
