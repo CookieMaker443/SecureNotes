@@ -56,6 +56,11 @@
     <string name="hint_search_files">Cerca file</string>
     <string name="action_add_file">Aggiungi file</string>
     <string name="dialog_delete_file_title">Elimina file</string>
+    <string name="error_loading_file">Impossibile aprire il file</string>
+    <string name="desc_full_image">Immagine a schermo intero</string>
+    <string name="desc_pdf_page">Pagina del documento PDF</string>
+    <string name="action_prev_page">Precedente</string>
+    <string name="action_next_page">Successiva</string>
 
     <!-- Note: Dialog di eliminazione -->
     <string name="dialog_delete_title">Elimina nota</string>

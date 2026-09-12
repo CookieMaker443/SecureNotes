@@ -9,6 +9,8 @@ import com.cookie.securenotes.data.local.storage.StoragePaths;
 import com.cookie.securenotes.security.CryptoException;
 import com.cookie.securenotes.security.CryptoManager;
 
+import java.io.File;
+
 public class SecureSession {
 
     private static SecureSession instance;
@@ -45,6 +47,10 @@ public class SecureSession {
         byte[] dbKey = prefsManager.getOrCreateDatabaseKey(cryptoManager);
         notesDatabase = NotesDatabase.open(appContext, dbKey);
         filesDatabase = FilesDatabase.open(appContext, dbKey);
+
+        File[] stale = appContext.getCacheDir().listFiles((dir, name) -> name.startsWith("pdf_view_"));
+        if (stale != null) for (File f : stale) f.delete();
+
         storagePaths = new StoragePaths(appContext);
         unlocked = true;
     }

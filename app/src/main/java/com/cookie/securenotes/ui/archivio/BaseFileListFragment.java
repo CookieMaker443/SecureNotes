@@ -1,5 +1,6 @@
 package com.cookie.securenotes.ui.archivio;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -8,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
+import android.content.Intent;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -22,6 +24,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.cookie.securenotes.R;
 import com.cookie.securenotes.data.local.db.FileEntry;
+import com.cookie.securenotes.ui.viewer.ImageViewerActivity;
+import com.cookie.securenotes.ui.viewer.PdfViewerActivity;
+import com.cookie.securenotes.ui.viewer.SecureViewerActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.cookie.securenotes.ui.archivio.OnFileClickListener;
 
@@ -57,7 +62,18 @@ public abstract class BaseFileListFragment extends Fragment {
         OnFileClickListener clickListener = new OnFileClickListener() {
             @Override
             public void onFileClick(FileEntry fileEntry) {
-                // TODO: aprire un visualizzatore dedicato (immagine/video/PDF)
+                public void onFileClick(FileEntry fileEntry) {
+                    Class<?> target;
+                    switch (fileEntry.tipo) {
+                        case "foto": target = ImageViewerActivity.class; break;
+                        case "video": target = VideoPlayerActivity.class; break;
+                        case "pdf":   target = PdfViewerActivity.class; break;
+                        default: return;
+                    }
+                    Intent intent = new Intent(requireContext(), target);
+                    intent.putExtra(SecureViewerActivity.EXTRA_FILE_ID, fileEntry.id);
+                    startActivity(intent);
+                }
             }
 
             @Override
