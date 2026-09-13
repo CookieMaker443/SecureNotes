@@ -43,6 +43,23 @@ public class NoteRepository {
         noteDao.insert(nota);
     }
 
+    /** Aggiorna titolo, contenuto cifrato e data di modifica di una nota esistente. */
+    public void updateNote(long notaId, String titolo, String contenutoInChiaro)
+            throws CryptoException, IOException {
+        Nota nota = noteDao.getById(notaId);
+        if (nota == null) {
+            throw new IOException("Nota non trovata nell'indice: id=" + notaId);
+        }
+
+        String contenutoCifrato = cryptoManager.encryptToString(contenutoInChiaro);
+        File destinazione = new File(storagePaths.getNotesDir(), nota.nomeFisico);
+        Files.write(destinazione.toPath(), contenutoCifrato.getBytes(StandardCharsets.UTF_8));
+
+        nota.titolo = titolo;
+        nota.dataModifica = System.currentTimeMillis();
+        noteDao.update(nota);
+    }
+
     public String loadNote(long notaId) throws CryptoException, IOException {
         Nota nota = noteDao.getById(notaId);
         if (nota == null) {

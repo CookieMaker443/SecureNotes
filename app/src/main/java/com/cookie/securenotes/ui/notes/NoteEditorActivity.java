@@ -78,7 +78,7 @@ public class NoteEditorActivity extends BaseActivity {
             return;
         }
 
-        viewModel.saveNote(titolo, contenuto);
+        viewModel.saveNote(editingNoteId, titolo, contenuto);
     }
 
     @Override

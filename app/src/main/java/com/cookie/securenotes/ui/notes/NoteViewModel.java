@@ -50,10 +50,14 @@ public class NoteViewModel extends ViewModel {
         });
     }
 
-    public void saveNote(String titolo, String contenuto) {
+    public void saveNote(long noteId, String titolo, String contenuto) {
         executors.diskIO().execute(() -> {
             try {
-                repository.saveNote(titolo, contenuto);
+                if (noteId == -1L) {
+                    repository.saveNote(titolo, contenuto);
+                } else {
+                    repository.updateNote(noteId, titolo, contenuto);
+                }
                 executors.mainThread(() -> saveCompleted.setValue(true));
             } catch (Exception e) {
                 executors.mainThread(() ->
@@ -79,9 +83,10 @@ public class NoteViewModel extends ViewModel {
             try {
                 String titolo = repository.getTitolo(id);
                 String contenuto = repository.loadNote(id);
-                // il titolo non serve ricifrarlo: lo recuperiamo dalla lista già in memoria
-                // in alternativa, aggiungere un metodo repository.getTitolo(id) se serve isolato
-                executors.mainThread(() -> editorContent.setValue(contenuto));
+                executors.mainThread(() -> {
+                    editorTitle.setValue(titolo);
+                    editorContent.setValue(contenuto);
+                });
             } catch (Exception e) {
                 executors.mainThread(() ->
                         errorMessage.setValue("Errore nel caricamento: " + e.getMessage()));
