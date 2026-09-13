@@ -1,13 +1,13 @@
 package com.cookie.securenotes.ui.viewer;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.media3.common.MediaItem;
+import androidx.media3.common.PlaybackException;
+import androidx.media3.common.Player;
 import androidx.media3.common.util.UnstableApi;
-import androidx.media3.datasource.DataSource;
 import androidx.media3.exoplayer.ExoPlayer;
-import androidx.media3.exoplayer.source.MediaSource;
-import androidx.media3.exoplayer.source.ProgressiveMediaSource;
 import androidx.media3.ui.PlayerView;
 
 import com.cookie.securenotes.R;
@@ -17,17 +17,16 @@ import com.cookie.securenotes.session.SecureSession;
 import com.cookie.securenotes.util.AppExecutors;
 
 import java.io.File;
-import android.util.Log;
-import androidx.media3.common.PlaybackException;
-import androidx.media3.common.Player;
+import java.io.FileOutputStream;
 
 @UnstableApi
 public class VideoPlayerActivity extends SecureViewerActivity {
 
-    private ExoPlayer player;
+    private static final String TAG = "SecureNotesVideo"; // per debug
 
-    //per debug
-    private static final String TAG = "SecureNotesVideo";
+    private ExoPlayer player;
+    private File tempFile;
+    private volatile boolean cancelled = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,35 +42,42 @@ public class VideoPlayerActivity extends SecureViewerActivity {
 
         // Il recupero da Room va fatto fuori dal main thread, come già per Foto/PDF.
         AppExecutors.getInstance().diskIO().execute(() -> {
-            FileEntry entry = repository.getById(fileId);
-            AppExecutors.getInstance().mainThread(() -> {
-                if (entry == null) {
-                    finish();
+            try {
+                FileEntry entry = repository.getById(fileId);
+                if (entry == null || cancelled) {
+                    if (!cancelled) AppExecutors.getInstance().mainThread(this::finish);
                     return;
                 }
-                setupPlayer(playerView, session, entry);
-            });
+
+                // Decifratura in streaming (64KB alla volta), non un array unico in RAM:
+                // evita di caricare l'intero video in memoria per file lunghi.
+                tempFile = File.createTempFile("video_view_", ".mp4", getCacheDir());
+                try (FileOutputStream out = new FileOutputStream(tempFile)) {
+                    repository.loadFileToStream(fileId, out);
+                }
+
+                if (cancelled) return; // l'utente è già uscito, non serve più continuare
+
+                AppExecutors.getInstance().mainThread(() -> {
+                    if (!cancelled) setupPlayer(playerView);
+                });
+            } catch (Exception e) {
+                Log.e(TAG, "Errore caricamento video", e);
+                if (!cancelled) AppExecutors.getInstance().mainThread(this::finish);
+            }
         });
     }
 
-    private void setupPlayer(PlayerView playerView, SecureSession session, FileEntry entry) {
-        File encryptedFile = new File(session.getStoragePaths().getVideoDir(), entry.nomeFisico);
-
-        DataSource.Factory factory = () -> new EncryptedFileDataSource(
-                encryptedFile, session.getCryptoManager());
-
-        MediaSource mediaSource = new ProgressiveMediaSource.Factory(factory)
-                .createMediaSource(MediaItem.fromUri(encryptedFile.toURI().toString()));
-
+    private void setupPlayer(PlayerView playerView) {
         player = new ExoPlayer.Builder(this).build();
         player.addListener(new Player.Listener() {
             @Override
             public void onPlayerError(PlaybackException error) {
-                android.util.Log.e(TAG, "Errore riproduzione video", error);
+                Log.e(TAG, "Errore riproduzione video", error);
             }
         });
         playerView.setPlayer(player);
-        player.setMediaSource(mediaSource);
+        player.setMediaItem(MediaItem.fromUri(tempFile.toURI().toString()));
         player.prepare();
         player.setPlayWhenReady(true);
     }
@@ -84,10 +90,12 @@ public class VideoPlayerActivity extends SecureViewerActivity {
 
     @Override
     protected void onDestroy() {
+        cancelled = true;
         super.onDestroy();
         if (player != null) {
             player.release();
             player = null;
         }
+        if (tempFile != null && tempFile.exists()) tempFile.delete();
     }
 }

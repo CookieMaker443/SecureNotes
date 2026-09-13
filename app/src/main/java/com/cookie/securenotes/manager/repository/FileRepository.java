@@ -8,8 +8,11 @@ import com.cookie.securenotes.security.CryptoManager;
 import com.cookie.securenotes.session.SecureSession;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.UUID;
@@ -59,6 +62,24 @@ public class FileRepository {
         byte[] datiCifrati = Files.readAllBytes(sorgente.toPath());
 
         return cryptoManager.decrypt(datiCifrati);
+    }
+
+    // in FileRepository.java
+    public void loadFileToStream(long fileEntryId, OutputStream destinazione) throws CryptoException, IOException {
+        FileEntry entry = fileDao.getById(fileEntryId);
+        if (entry == null) {
+            throw new IOException("File non trovato nell'indice: id=" + fileEntryId);
+        }
+        File sorgente = new File(getDirByTipo(entry.tipo), entry.nomeFisico);
+
+        try (InputStream cifrato = new FileInputStream(sorgente);
+             InputStream decifrato = cryptoManager.decryptStream(cifrato)) {
+            byte[] buffer = new byte[64 * 1024]; // 64KB alla volta, non tutto insieme
+            int letti;
+            while ((letti = decifrato.read(buffer)) != -1) {
+                destinazione.write(buffer, 0, letti);
+            }
+        }
     }
 
     /** Cerca file per tipo e nome (parziale). */

@@ -48,10 +48,17 @@ public class SecureSession {
         notesDatabase = NotesDatabase.open(appContext, dbKey);
         filesDatabase = FilesDatabase.open(appContext, dbKey);
 
+        // pulizia di eventuali file temporanei residui di PDF
         File[] stale = appContext.getCacheDir().listFiles((dir, name) -> name.startsWith("pdf_view_"));
         if (stale != null) for (File f : stale) f.delete();
 
         storagePaths = new StoragePaths(appContext);
+
+        // pulizia di eventuali file temporanei residui nella directory di cache
+        File[] staleCache = appContext.getCacheDir().listFiles((dir, name) ->
+                name.startsWith("pdf_view_") || name.startsWith("video_view_"));
+        if (staleCache != null) for (File f : staleCache) f.delete();
+
         unlocked = true;
     }
 
