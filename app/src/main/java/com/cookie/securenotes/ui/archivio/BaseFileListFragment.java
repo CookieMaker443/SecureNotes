@@ -15,9 +15,11 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.OptIn;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -61,6 +63,7 @@ public abstract class BaseFileListFragment extends Fragment {
         RecyclerView recyclerView = view.findViewById(R.id.filesRecyclerView);
 
         OnFileClickListener clickListener = new OnFileClickListener() {
+            @androidx.media3.common.util.UnstableApi
             @Override
             public void onFileClick(FileEntry fileEntry) {
                 Class<?> target;
