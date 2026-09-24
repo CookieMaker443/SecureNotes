@@ -55,8 +55,9 @@ public class SecureSession {
         storagePaths = new StoragePaths(appContext);
 
         // pulizia di eventuali file temporanei residui nella directory di cache
+        // (pdf_view_/video_view_: viewer; secnotes_tmp_: NUOVO, export/import backup)
         File[] staleCache = appContext.getCacheDir().listFiles((dir, name) ->
-                name.startsWith("pdf_view_") || name.startsWith("video_view_"));
+                name.startsWith("pdf_view_") || name.startsWith("video_view_") || name.startsWith("secnotes_tmp_"));
         if (staleCache != null) for (File f : staleCache) f.delete();
 
         unlocked = true;
