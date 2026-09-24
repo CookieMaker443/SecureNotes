@@ -13,7 +13,9 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 
 import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream; // serve per encryptStream
 import java.io.InputStream;
+import java.io.OutputStream; // serve per encryptStream
 import java.io.IOException;
 
 
@@ -123,7 +125,7 @@ public class CryptoManager {
         }
     }
 
-    // ---- Famiglia 3: streaming (video) — decifratura sequenziale ----
+    // ---- Famiglia 3: streaming (video, backup) — cifratura/decifratura sequenziale ----
 
     /**
      * Apre uno stream in chiaro a partire da uno stream cifrato (formato: IV(12) || ciphertext+tag).
@@ -148,6 +150,29 @@ public class CryptoManager {
             throw e;
         } catch (Exception e) {
             throw new CryptoException("Errore nell'apertura dello stream cifrato", e);
+        }
+    }
+
+    /**
+     * simmetrico a decryptStream: apre uno stream su cui scrivere byte in chiaro,
+     * che vengono cifrati a blocchi e scritti su destinazioneCifrata mano a mano.
+     * Genera un IV nuovo e lo scrive subito in testa, stesso formato di decryptStream.
+     * Serve per FileRepository.importFile: mai un video intero in RAM nemmeno in fase
+     * di RIcifratura durante l'import di un backup.
+     */
+    public OutputStream encryptStream(OutputStream destinazioneCifrata) throws CryptoException {
+        try {
+            Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+            cipher.init(Cipher.ENCRYPT_MODE, getSecretKey());
+            byte[] iv = cipher.getIV(); // 12 byte generati automaticamente da GCM
+
+            // IV in chiaro in testa, prima dei dati cifrati — è lo stesso schema letto da decryptStream
+            destinazioneCifrata.write(iv);
+
+            // tutto ciò che viene scritto su questo stream viene cifrato a blocchi, non serve un buffer unico
+            return new CipherOutputStream(destinazioneCifrata, cipher);
+        } catch (Exception e) {
+            throw new CryptoException("Errore nell'apertura dello stream di cifratura", e);
         }
     }
 }

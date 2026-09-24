@@ -82,6 +82,38 @@ public class FileRepository {
         }
     }
 
+    /**
+     * usato in import di un backup: prende contenuto già decifrato (viene dallo
+     * zip del backup) e lo scrive cifrato con la chiave di QUESTO device, a blocchi
+     * (mai un array intero in RAM, stesso motivo di loadFileToStream ma al contrario).
+     * Genera sempre un nomeFisico (UUID) nuovo, non riusa mai quello del backup —
+     * evita collisioni con file già presenti su questo device. dataCreazione viene
+     * dal manifest del backup, non da "adesso": si vuole preservare la cronologia originale.
+     */
+    public void importFile(String tipo, String nomeOriginale, InputStream contenutoChiaro,
+                            long dataCreazione, long dimensioneByte) throws CryptoException, IOException {
+        String nomeFisico = UUID.randomUUID().toString();
+        File destinazione = new File(getDirByTipo(tipo), nomeFisico);
+
+        try (OutputStream fileOut = new FileOutputStream(destinazione);
+             OutputStream cifrato = cryptoManager.encryptStream(fileOut)) {
+            byte[] buffer = new byte[64 * 1024];
+            int letti;
+            while ((letti = contenutoChiaro.read(buffer)) != -1) {
+                cifrato.write(buffer, 0, letti);
+            }
+        }
+
+        FileEntry entry = new FileEntry();
+        entry.nomeOriginale = nomeOriginale;
+        entry.nomeFisico = nomeFisico;
+        entry.tipo = tipo;
+        entry.dimensioneByte = dimensioneByte;
+        entry.dataCreazione = dataCreazione; // preservata dal backup, non System.currentTimeMillis()
+
+        fileDao.insert(entry);
+    }
+
     /** Cerca file per tipo e nome (parziale). */
     public List<FileEntry> searchFile(String tipo, String query) {
         return fileDao.search(tipo, query);

@@ -114,12 +114,52 @@
             android:text="@string/settings_section_backup"
             android:textAppearance="?attr/textAppearanceTitleMedium" />
 
+        <!-- NUOVO: password di backup, separata dal PIN app, richiesta solo per l'export -->
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="@string/hint_backup_password">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editBackupPassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- NUOVO: conferma della password di backup -->
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="@string/hint_backup_password_confirm">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editBackupPasswordConfirm"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
         <Button
             android:id="@+id/btnExportBackup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="@string/action_export_backup" />
+
+        <!-- NUOVO: tasto import, la password viene chiesta dopo la scelta del file (dialog) -->
+        <Button
+            android:id="@+id/btnImportBackup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/action_import_backup" />
 
         <Button
             android:id="@+id/btnSaveSettings"

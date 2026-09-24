@@ -72,6 +72,28 @@ public class NoteRepository {
         return cryptoManager.decryptFromString(contenutoCifrato);
     }
 
+    /**
+     * usato in import di un backup: come saveNote, ma le date arrivano già
+     * pronte dal manifest (si preserva la cronologia originale, non si usa "adesso")
+     * e il nomeFisico è comunque un UUID nuovo, mai quello del device di origine.
+     */
+    public void importNote(String titolo, String contenutoInChiaro, long dataCreazione, long dataModifica)
+            throws CryptoException, IOException {
+        String nomeFisico = UUID.randomUUID().toString();
+        File destinazione = new File(storagePaths.getNotesDir(), nomeFisico);
+
+        String contenutoCifrato = cryptoManager.encryptToString(contenutoInChiaro);
+        Files.write(destinazione.toPath(), contenutoCifrato.getBytes(StandardCharsets.UTF_8));
+
+        Nota nota = new Nota();
+        nota.titolo = titolo;
+        nota.nomeFisico = nomeFisico;
+        nota.dataCreazione = dataCreazione; // preservata dal backup
+        nota.dataModifica = dataModifica;
+
+        noteDao.insert(nota);
+    }
+
     public List<Nota> searchNote(String query) {
         return noteDao.search(query);
     }

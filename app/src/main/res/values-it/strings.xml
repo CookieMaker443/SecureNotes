@@ -48,6 +48,21 @@
     <string name="error_pin_required">Inserisci il nuovo PIN</string>
     <string name="error_pin_mismatch">I due PIN non coincidono</string>
 
+    <!-- Backup: export/import -->
+    <string name="hint_backup_password">Backup password</string>
+    <string name="hint_backup_password_confirm">Conferma password di backup</string>
+    <string name="action_import_backup">Importa backup criptato</string>
+    <string name="dialog_import_password_title">Inserisci password di backup</string>
+    <string name="hint_import_password">Backup password</string>
+    <string name="error_backup_password_too_short">La password deve essere minima 8 caratteri</string>
+    <string name="error_backup_password_mismatch">Le password di backup non corrispondono</string>
+    <string name="error_backup_wrong_password">Password sbagliata o file corrotto</string>
+    <string name="msg_export_in_progress">Esportando backup…</string>
+    <string name="msg_export_success">Backup esportato correttamente</string>
+    <string name="error_export_failed" translatable="false">Export fallito: %1$s</string>
+    <string name="msg_import_in_progress">Importando il backup…</string>
+    <string name="msg_import_success">Backup importato correttamente</string>
+
     <!-- Archivio -->
     <string name="title_archivio">Archivio</string>
     <string name="tab_foto">Foto</string>
