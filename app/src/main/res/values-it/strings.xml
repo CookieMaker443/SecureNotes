@@ -63,6 +63,17 @@
     <string name="msg_import_in_progress">Importando il backup…</string>
     <string name="msg_import_success">Backup importato correttamente</string>
 
+    <!-- Backup: esiti con conteggio, conferma di uscita, cancellazione -->
+    <string name="msg_export_success_count" translatable="false">Backup esportato: %1$d item</string>
+    <string name="msg_export_success_with_skipped" translatable="false">Backup esportato: %1$d item, %2$d ignorati (guarda skipped_report.txt dentro il backup)</string>
+    <string name="msg_import_success_count" translatable="false">Backup importato: %1$d item</string>
+    <string name="msg_import_success_with_skipped" translatable="false">Backup importato: %1$d item, %2$d ignorati</string>
+    <string name="msg_backup_cancelled">Backup annullato</string>
+    <string name="confirm_leave_backup_title">Backup in corso</string>
+    <string name="confirm_leave_backup_message">Uscire adesso cancellerà l\'export/import. Sicuro di voler uscire?</string>
+    <string name="action_leave">Esci</string>
+    <string name="action_stay">Rimani</string>
+
     <!-- Archivio -->
     <string name="title_archivio">Archivio</string>
     <string name="tab_foto">Foto</string>

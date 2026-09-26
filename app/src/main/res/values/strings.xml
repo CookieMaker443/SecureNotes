@@ -48,7 +48,7 @@
     <string name="error_pin_required">Enter the new PIN</string>
     <string name="error_pin_mismatch">The two PINs do not match</string>
 
-    <!-- Backup: export/import -->
+    <!-- Backup: export/import (NUOVO) -->
     <string name="hint_backup_password">Backup password</string>
     <string name="hint_backup_password_confirm">Confirm backup password</string>
     <string name="action_import_backup">Import encrypted backup</string>
@@ -63,6 +63,17 @@
     <string name="msg_import_in_progress">Importing backup…</string>
     <string name="msg_import_success">Backup imported successfully</string>
     <string name="error_import_failed" translatable="false">Import failed: %1$s</string>
+
+    <!-- Backup: esiti con conteggio, conferma di uscita, cancellazione -->
+    <string name="msg_export_success_count" translatable="false">Backup exported: %1$d items</string>
+    <string name="msg_export_success_with_skipped" translatable="false">Backup exported: %1$d items, %2$d skipped (see skipped_report.txt inside the backup)</string>
+    <string name="msg_import_success_count" translatable="false">Backup imported: %1$d items</string>
+    <string name="msg_import_success_with_skipped" translatable="false">Backup imported: %1$d items, %2$d skipped</string>
+    <string name="msg_backup_cancelled">Backup operation cancelled</string>
+    <string name="confirm_leave_backup_title">Backup in progress</string>
+    <string name="confirm_leave_backup_message">Leaving now will cancel the export/import. Are you sure you want to leave?</string>
+    <string name="action_leave">Leave</string>
+    <string name="action_stay">Stay</string>
 
     <!-- Archivio -->
     <string name="title_archivio">Archive</string>

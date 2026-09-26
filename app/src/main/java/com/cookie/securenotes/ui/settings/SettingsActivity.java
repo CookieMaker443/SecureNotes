@@ -9,28 +9,23 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.cookie.securenotes.R;
 import com.cookie.securenotes.data.local.prefs.AppSettings;
 import com.cookie.securenotes.data.local.prefs.SecurePrefsException;
 import com.cookie.securenotes.data.local.prefs.SecurePrefsManager;
-import com.cookie.securenotes.manager.backup.ExporterManager;
-import com.cookie.securenotes.security.BackupCryptoException;
 import com.cookie.securenotes.session.LockManager;
-import com.cookie.securenotes.session.SecureSession;
 import com.cookie.securenotes.ui.common.BaseActivity;
-import com.cookie.securenotes.util.AppExecutors;
 
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.Executor;
@@ -44,7 +39,7 @@ public class SettingsActivity extends BaseActivity {
     private LockManager lockManager;
     private AppSettings appSettings;
     private SecurePrefsManager prefsManager;
-    private ExporterManager exporterManager; // NUOVO
+    private BackupViewModel backupViewModel; // sostituisce l'ExporterManager tenuto direttamente dall'Activity
 
     private EditText editTimeoutMinutes;
     private EditText editRecentNotesCount;
@@ -53,23 +48,24 @@ public class SettingsActivity extends BaseActivity {
     private EditText editConfirmPin;
     private boolean biometricVerified = false;
 
-    // campi per la password di backup (solo export)
+    // campi backup — promossi a variabili d'istanza: servono anche nell'observer del ViewModel, per abilitare/disabilitare
     private EditText editBackupPassword;
     private EditText editBackupPasswordConfirm;
+    private Button btnExportBackup;
+    private Button btnImportBackup;
 
-    // tenuta tra il click su "Esporta" (dove si legge la password) e il ritorno
-    // del picker SAF con la destinazione scelta dall'utente
+    // tenuta tra il click su "Esporta" (dove si legge la password) e il ritorno del picker SAF con la destinazione scelta
     private char[] passwordDaEsportare;
 
     // launcher SAF per scegliere DOVE salvare il backup esportato
     private final ActivityResultLauncher<String> createBackupLauncher =
             registerForActivityResult(new ActivityResultContracts.CreateDocument("application/octet-stream"), uri -> {
                 if (uri == null) {
-                    // l'utente ha annullato il picker: si azzera la password già letta, non serve più
-                    azzeraPasswordEsportata();
+                    azzeraPasswordEsportata(); // l'utente ha annullato il picker: la password letta non serve più
                     return;
                 }
-                avviaExport(uri);
+                backupViewModel.avviaExport(uri, passwordDaEsportare);
+                passwordDaEsportare = null; // il riferimento passa al ViewModel, che se ne occupa (azzeramento incluso)
             });
 
     // launcher SAF per scegliere QUALE file .secnotes importare
@@ -78,6 +74,14 @@ public class SettingsActivity extends BaseActivity {
                 if (uri == null) return; // annullato
                 mostraDialogPasswordImport(uri);
             });
+
+    // NUOVO: intercetta il tasto indietro (fisico o di sistema) per avvisare se un'operazione è in corso
+    private final OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(true) {
+        @Override
+        public void handleOnBackPressed() {
+            confermaUscita();
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,8 +103,10 @@ public class SettingsActivity extends BaseActivity {
             return;
         }
 
-        // un solo ExporterManager per tutta la vita di questa Activity, chiuso in onDestroy
-        exporterManager = new ExporterManager(SecureSession.getInstance(), getApplicationContext());
+        // il ViewModel sopravvive a una rotazione schermo (stessa Activity, ricreata) — non a un'uscita vera dalla schermata
+        backupViewModel = new ViewModelProvider(this).get(BackupViewModel.class);
+
+        getOnBackPressedDispatcher().addCallback(this, backPressedCallback);
 
         editTimeoutMinutes = findViewById(R.id.editTimeoutMinutes);
         editRecentNotesCount = findViewById(R.id.editRecentNotesCount);
@@ -109,8 +115,8 @@ public class SettingsActivity extends BaseActivity {
         editConfirmPin = findViewById(R.id.editConfirmPin);
         Button btnVerifyBiometric = findViewById(R.id.btnVerifyBiometric);
         Button btnSaveSettings = findViewById(R.id.btnSaveSettings);
-        Button btnExportBackup = findViewById(R.id.btnExportBackup);
-        Button btnImportBackup = findViewById(R.id.btnImportBackup);
+        btnExportBackup = findViewById(R.id.btnExportBackup);
+        btnImportBackup = findViewById(R.id.btnImportBackup);
         editBackupPassword = findViewById(R.id.editBackupPassword);
         editBackupPasswordConfirm = findViewById(R.id.editBackupPasswordConfirm);
 
@@ -120,10 +126,30 @@ public class SettingsActivity extends BaseActivity {
 
         btnVerifyBiometric.setOnClickListener(v -> showBiometricPrompt());
         btnSaveSettings.setOnClickListener(v -> saveSettings());
-
-        // Backup: ora funzionante, non più placeholder
         btnExportBackup.setOnClickListener(v -> validaEAvviaExport());
         btnImportBackup.setOnClickListener(v -> openBackupLauncher.launch(new String[]{"*/*"})); // .secnotes non è un MIME registrato
+
+        osservaStatoBackup();
+    }
+
+    /** Un solo observer per tutta la UI del backup: abilita/disabilita i pulsanti e mostra l'esito. */
+    private void osservaStatoBackup() {
+        backupViewModel.getUiState().observe(this, stato -> {
+            boolean inCorso = stato.stato == BackupViewModel.Stato.IN_CORSO;
+
+            // mentre un export/import gira, non si può avviarne un altro né toccare le password
+            btnExportBackup.setEnabled(!inCorso);
+            btnImportBackup.setEnabled(!inCorso);
+            editBackupPassword.setEnabled(!inCorso);
+            editBackupPasswordConfirm.setEnabled(!inCorso);
+
+            if (stato.stato == BackupViewModel.Stato.COMPLETATO || stato.stato == BackupViewModel.Stato.ERRORE) {
+                Toast.makeText(this, stato.messaggio, Toast.LENGTH_LONG).show();
+                // torna INATTIVO subito dopo aver mostrato il messaggio, altrimenti una rotazione
+                // schermo successiva potrebbe far ricomparire lo stesso Toast
+                backupViewModel.resetStato();
+            }
+        });
     }
 
     // ================== EXPORT ==================
@@ -142,7 +168,7 @@ public class SettingsActivity extends BaseActivity {
             return;
         }
 
-        // char[] invece di lasciarla come String: si può azzerare esplicitamente dopo l'uso
+        // char[] invece di String: si può azzerare esplicitamente dopo l'uso (lo fa BackupViewModel a fine operazione)
         passwordDaEsportare = password.toCharArray();
 
         // nome suggerito: SecNotes_export_ddMMyy.secnotes
@@ -150,34 +176,9 @@ public class SettingsActivity extends BaseActivity {
         createBackupLauncher.launch("SecNotes_export_" + data + ".secnotes");
     }
 
-    /** Chiamato quando l'utente ha scelto dove salvare (Uri di destinazione già confermato dal picker). */
-    private void avviaExport(Uri destinazioneUri) {
-        char[] password = passwordDaEsportare; // copia locale, per sicurezza in caso di riuso della Activity
-
-        Toast.makeText(this, getString(R.string.msg_export_in_progress), Toast.LENGTH_SHORT).show();
-
-        exporterManager.esegui(() -> {
-            try (OutputStream out = getContentResolver().openOutputStream(destinazioneUri)) {
-                if (out == null) {
-                    throw new java.io.IOException("Impossibile aprire il file di destinazione");
-                }
-                exporterManager.exportMedia(password, out, null); // null: nessuna barra di progresso in questa versione
-
-                AppExecutors.getInstance().mainThread(() ->
-                        Toast.makeText(this, getString(R.string.msg_export_success), Toast.LENGTH_LONG).show());
-
-            } catch (Exception e) {
-                AppExecutors.getInstance().mainThread(() ->
-                        Toast.makeText(this, getString(R.string.error_export_failed, e.getMessage()), Toast.LENGTH_LONG).show());
-            } finally {
-                azzeraPasswordEsportata();
-            }
-        });
-    }
-
     private void azzeraPasswordEsportata() {
         if (passwordDaEsportare != null) {
-            Arrays.fill(passwordDaEsportare, '\0'); // sovrascrive la password in RAM, non solo "dimentica" il riferimento
+            java.util.Arrays.fill(passwordDaEsportare, '\0');
             passwordDaEsportare = null;
         }
     }
@@ -194,41 +195,35 @@ public class SettingsActivity extends BaseActivity {
                 .setView(dialogView)
                 .setPositiveButton(getString(R.string.action_import_backup), (dialog, which) -> {
                     char[] password = editImportPassword.getText().toString().toCharArray();
-                    avviaImport(sorgenteUri, password);
+                    backupViewModel.avviaImport(sorgenteUri, password);
                 })
                 .setNegativeButton(getString(R.string.action_cancel), null)
                 .show();
     }
 
-    private void avviaImport(Uri sorgenteUri, char[] password) {
-        Toast.makeText(this, getString(R.string.msg_import_in_progress), Toast.LENGTH_SHORT).show();
+    // ================== conferma prima di uscire (NUOVO) ==================
 
-        exporterManager.esegui(() -> {
-            try (InputStream in = getContentResolver().openInputStream(sorgenteUri)) {
-                if (in == null) {
-                    throw new java.io.IOException("Impossibile aprire il file di backup scelto");
-                }
-                exporterManager.importMedia(password, in, null);
-
-                AppExecutors.getInstance().mainThread(() ->
-                        Toast.makeText(this, getString(R.string.msg_import_success), Toast.LENGTH_LONG).show());
-
-            } catch (BackupCryptoException e) {
-                // caso specifico: password sbagliata o file corrotto, messaggio dedicato invece di quello generico
-                AppExecutors.getInstance().mainThread(() ->
-                        Toast.makeText(this, getString(R.string.error_backup_wrong_password), Toast.LENGTH_LONG).show());
-
-            } catch (Exception e) {
-                AppExecutors.getInstance().mainThread(() ->
-                        Toast.makeText(this, getString(R.string.error_import_failed, e.getMessage()), Toast.LENGTH_LONG).show());
-
-            } finally {
-                Arrays.fill(password, '\0');
-            }
-        });
+    /**
+     * Chiamato sia dal tasto indietro di sistema sia dalla freccia nella toolbar:
+     * se un export/import è in corso, avvisa prima di lasciare davvero la schermata.
+     */
+    private void confermaUscita() {
+        if (backupViewModel.isOperazioneInCorso()) {
+            new AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.confirm_leave_backup_title))
+                    .setMessage(getString(R.string.confirm_leave_backup_message))
+                    .setPositiveButton(getString(R.string.action_leave), (dialog, which) -> {
+                        backupViewModel.annullaOperazione(); // cancellazione cooperativa, non istantanea
+                        finish();
+                    })
+                    .setNegativeButton(getString(R.string.action_stay), null)
+                    .show();
+        } else {
+            finish();
+        }
     }
 
-    // ================== resto della Activity ==================
+    // ================== resto della Activity, invariato ==================
 
     private void showBiometricPrompt() {
         Executor executor = ContextCompat.getMainExecutor(this);
@@ -319,17 +314,8 @@ public class SettingsActivity extends BaseActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
-        finish();
+        // NUOVO: passa dalla stessa conferma del tasto indietro, invece di un finish() diretto
+        confermaUscita();
         return true;
-    }
-
-    // evita di lasciare appeso il thread dedicato di ExporterManager se la schermata si chiude
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (exporterManager != null) {
-            exporterManager.cancel();   // interrompe un'eventuale operazione ancora in corso
-            exporterManager.shutdown(); // chiude il suo executor dedicato
-        }
     }
 }
