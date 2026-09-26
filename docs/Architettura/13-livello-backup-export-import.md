@@ -1,51 +1,41 @@
 # 13 — Livello Backup (Export/Import cifrato)
 
-> Documento aggiuntivo ai 12 file già esistenti in `securenotes-docs/`. Copre il
-> design — deciso in chat, **non ancora scritto in codice** — per l'esportazione
-> e l'importazione di un backup cifrato con password. `btnExportBackup` esiste
-> già nel layout (`activity_settings.xml`, vedi doc 09) ma è `setEnabled(false)`,
-> solo placeholder. Questo documento descrive cosa serve per renderlo
-> funzionante, più un nuovo tasto `btnImportBackup` mai esistito finora.
+> Aggiornato allo stato **as-built**: a differenza della prima versione di questo
+> documento (design, pre-codice), qui si descrive cosa è stato effettivamente scritto.
+> Per il seguito previsto (migrazione a `WorkManager`), vedi il file separato
+> `todo-backup-workmanager.md` in `docs/todo/`.
 
-## Decisioni chiuse in questa sessione di design
+## Scopo
 
-- **Autorizzazione ≠ cifratura**: PIN/biometria dell'app autorizzano l'operazione
-  (come già avviene per il cambio PIN in `SettingsActivity`); una **password di
-  backup separata**, chiesta solo in fase di export, è quella che cifra
-  effettivamente lo zip. Le due cose non si mescolano mai.
-- **Formato file**: `.secnotes` = zip normale (senza password, `java.util.zip`,
-  già nell'SDK) cifrato per intero con AES/GCM, chiave derivata dalla password
-  di backup via **PBKDF2WithHmacSHA256**. Nessuna libreria esterna nuova.
-- **Validazione password in export sì, in import no**: in export si controlla
-  lunghezza minima + corrispondenza dei due campi, *prima* di procedere. In
-  import non si può "validare" una password a priori: si tenta la decifratura
-  e si intercetta `AEADBadTagException` (stesso meccanismo già usato da
-  `CryptoManager` per dati manomessi) per dire "password errata o file non
-  valido".
-- **Manifest dentro lo zip** con `schemaVersion`: fa da "file di check" — se
-  assente o versione non riconosciuta, l'import si rifiuta subito.
-- **Date preservate in import**: le note/i file importati mantengono
-  `dataCreazione`/`dataModifica` originali dal manifest, non la data
-  dell'import.
-- **UUID sempre rigenerati in import**, per evitare collisioni con dati già
-  presenti sul device di destinazione.
-- **Ricifratura locale obbligatoria in import**: il contenuto viaggia nello zip
-  in chiaro (protetto solo dalla cifratura del blob `.secnotes`); una volta
-  dentro l'app, va sempre ricifrato con il `CryptoManager` **del device
-  corrente** — la chiave Keystore non è mai la stessa tra due device, quindi
-  non avrebbe senso portarsi dietro byte già cifrati con una chiave che qui
-  non esiste.
-- **SAF per la destinazione/sorgente file**: `ACTION_CREATE_DOCUMENT` per
-  l'export, `ActivityResultContracts.OpenDocument` per l'import — stesso
-  pattern già in uso per l'import dei file media (doc 08), nessun permesso di
-  storage richiesto.
-- **Executor dedicato**: `ExporterManager` non usa `AppExecutors.diskIO()`
-  (thread singolo condiviso con Note/Archivio) — un backup lungo lo terrebbe
-  occupato per minuti, bloccando il resto dell'app (stesso problema già visto
-  con il video, doc 12, Fase 6). Ha un proprio `ExecutorService` interno.
-- **Streaming a blocchi**, non file interi in RAM — stesso principio già
-  applicato al video (`loadFileToStream`), esteso qui sia in lettura (export)
-  che in scrittura (import, nuovo `encryptStream` simmetrico).
+`btnExportBackup` era solo un placeholder (`setEnabled(false)`, vedi doc 09). Ora
+`SettingsActivity` ha export e import funzionanti, con un `BackupViewModel` dedicato
+che gestisce lo stato dell'operazione.
+
+## Decisioni chiuse
+
+- **Autorizzazione ≠ cifratura**: PIN/biometria dell'app restano cose separate dalla
+  password di backup (mai richieste per il backup in sé in questa versione — solo la
+  password di backup autorizza/protegge l'operazione).
+- **Formato file**: `.secnotes` = zip normale (`java.util.zip`, già nell'SDK) cifrato
+  per intero con AES/GCM, chiave derivata dalla password via PBKDF2WithHmacSHA256
+  (150.000 iterazioni). Nessuna libreria esterna.
+- **Validazione password**: solo in export (lunghezza minima 8 + doppia conferma).
+  In import non è possibile validare a priori: si tenta la decifratura, un tag GCM
+  che non torna diventa `BackupCryptoException` → messaggio "password errata o file
+  non valido".
+- **Manifest dentro lo zip** (`manifest.json`) con `schemaVersion`: fa da controllo di
+  validità in import.
+- **Date preservate** in import (da manifest, non "adesso").
+- **UUID sempre rigenerati** in import — mai collisioni col device di destinazione.
+- **Ricifratura locale obbligatoria** in import, con il `CryptoManager` del device
+  corrente (la chiave Keystore non è mai la stessa tra due device).
+- **SAF** per scegliere destinazione (export) e sorgente (import) — nessun permesso
+  di storage.
+- **Executor dedicato** in `ExporterManager`, separato da `AppExecutors.diskIO()`.
+- **Streaming a blocchi** sia in lettura (export) che in scrittura (import).
+- **`BackupViewModel` dedicato**, scoped a `SettingsActivity` — vedi sezione apposita.
+- **Skip-and-continue per elemento**, con report scritto dentro il backup stesso —
+  vedi sezione apposita.
 
 ## Formato del file `.secnotes`
 
@@ -53,282 +43,128 @@
 [salt PBKDF2 — 16 byte, in chiaro] [IV GCM — 12 byte, in chiaro] [ciphertext + tag GCM]
 ```
 
-Il salt e l'IV non sono segreti — servono solo a derivare la chiave e ad
-inizializzare il cifrario; il segreto è la password, mai scritta su disco.
-Il `ciphertext`, una volta decifrato, è un file zip normale (leggibile con
-`ZipInputStream`/`ZipFile` standard) che contiene:
+Il `ciphertext`, decifrato, è uno zip normale con:
 
 ```
 manifest.json
-entries/
-  <uuid-o-id-qualunque>   (un file per ogni nota/foto/video/pdf, contenuto in chiaro)
-  ...
+skipped_report.txt      <- NUOVO: sempre presente, anche se vuoto ("Nessun elemento saltato.")
+notes/n_0, n_1, ...      (contenuto delle note, in chiaro una volta decifrato lo zip)
+files/f_0, f_1, ...      (contenuto dei file, in chiaro una volta decifrato lo zip)
 ```
 
-### `manifest.json` — struttura
+## Classi coinvolte (stato finale)
 
-```json
-{
-  "schemaVersion": 1,
-  "app": "SecureNotes",
-  "exportDate": "2026-09-24T10:30:00Z",
-  "notes": [
-    { "entryFile": "n_0001", "titolo": "...", "dataCreazione": 0, "dataModifica": 0 }
-  ],
-  "files": [
-    { "entryFile": "f_0001", "tipo": "foto", "nomeOriginale": "...", "dimensioneByte": 0, "dataCreazione": 0 }
-  ]
-}
-```
+| Classe | Package | Ruolo |
+| --- | --- | --- |
+| `BackupCrypto` | `security` | cifra/decifra il blob `.secnotes` con password (PBKDF2 + AES/GCM streaming) |
+| `BackupCryptoException` | `security` | eccezione dedicata: password errata o file corrotto |
+| `BackupManifest` (+ `NoteEntry`, `FileEntryMeta`) | `manager.backup` | modello del manifest, serializzazione JSON (`org.json`, già nell'SDK) |
+| `ExporterManager` | `manager.backup` | orchestratore: `exportMedia`/`importMedia`, executor dedicato, skip-and-continue |
+| `BackupViewModel` | `ui.settings` | **NUOVO** — stato dell'operazione via `LiveData`, possiede l'unico `ExporterManager` di questa sessione UI |
+| `CryptoManager.encryptStream` | `security` | aggiunta simmetrica a `decryptStream` (già esistente), per ricifrare a blocchi in import |
+| `NoteRepository.importNote` / `FileRepository.importFile` | `manager.repository` | scrivono con UUID nuovo, data preservata dal manifest, passando sempre da `CryptoManager` — mai `ExporterManager` tocca cifratura/DAO direttamente |
+| `SecureSession.unlock()` | `session` | pulizia dei residui `secnotes_tmp_*`, stessa rete di sicurezza già in uso per `pdf_view_*`/`video_view_*` |
 
-`entryFile` è solo il nome della entry dentro il file zip interno — non ha
-nessun legame con l'UUID fisico originale sul device sorgente (che comunque
-verrà rigenerato in import).
-
----
-
-## Classi nuove
-
-### `BackupCrypto`
-
-Package proposto: `com.cookie.securenotes.security` (accanto a `CryptoManager`,
-ma **senza dipendenza da Keystore** — lavora solo con una chiave derivata da
-password, che vive esclusivamente in RAM per la durata dell'operazione).
-
-| Metodo | Cosa fa |
-| --- | --- |
-| `deriveKey(char[] password, byte[] salt) -> SecretKey` | PBKDF2WithHmacSHA256, chiave AES a 32 byte |
-| `encryptStream(char[] password, InputStream zipInChiaro, OutputStream dest) throws BackupCryptoException` | genera salt+IV casuali, li scrive in testa a `dest`, poi cifra a blocchi (stesso schema IV-in-testa di `CryptoManager`) |
-| `decryptStream(char[] password, InputStream sorgenteCifrata, OutputStream zipDecifrato) throws BackupCryptoException` | legge salt+IV dalla testa, deriva la chiave, decifra a blocchi. Propaga `AEADBadTagException` come causa di `BackupCryptoException` — il chiamante lo interpreta come "password errata o file corrotto" |
-
-`char[]` per la password (non `String`) — si può azzerare esplicitamente dopo
-l'uso, `String` in Java è immutabile e resta in memoria finché il GC non
-decide.
-
-### `BackupManifest` (+ `NoteEntry`, `FileEntryMeta`)
-
-Semplice modello dati, serializzato/deserializzato in JSON (via
-`org.json`, già disponibile su Android, niente libreria nuova tipo Gson).
-
-```
-BackupManifest
-  int schemaVersion
-  String app
-  String exportDate
-  List<NoteEntry> notes
-  List<FileEntryMeta> files
-
-BackupManifest.NoteEntry
-  String entryFile, titolo
-  long dataCreazione, dataModifica
-
-BackupManifest.FileEntryMeta
-  String entryFile, tipo, nomeOriginale
-  long dimensioneByte, dataCreazione
-```
-
-### `ExporterManager`
-
-Package proposto: `com.cookie.securenotes.manager.backup`. Riceve
-`SecureSession` nel costruttore (stesso schema di `NoteRepository`/
-`FileRepository`) e ottiene da lì i due repository — **non** tocca mai
-direttamente `CryptoManager` o i DAO: per rispettare la stessa regola già in
-vigore nel livello repository (doc 04), ogni cifratura/scrittura DB passa
-sempre da `NoteRepository`/`FileRepository`.
-
-| Metodo | Cosa fa |
-| --- | --- |
-| `exportMedia(char[] password, OutputStream destinazione, ProgressListener listener) throws ExportException` | vedi flusso sotto |
-| `importMedia(char[] password, InputStream sorgente, ProgressListener listener) throws ImportException` | vedi flusso sotto |
-| `cancel()` | imposta un flag `volatile boolean cancelled`, controllato nel loop di copia — stesso pattern cooperativo già usato in `VideoPlayerActivity` |
-
-Interfaccia annidata (usata da un solo chiamante, quindi annidata come
-`LockListener`, non estratta come `OnFileClickListener`):
+### `ExporterManager` — firme finali
 
 ```java
-public interface ProgressListener {
-    void onProgress(int completati, int totale);
-}
+BackupResult exportMedia(char[] password, OutputStream destinazione, ProgressListener listener)
+        throws CryptoException, IOException, BackupCryptoException, JSONException, OperazioneAnnullataException;
+
+BackupResult importMedia(char[] password, InputStream sorgente, ProgressListener listener)
+        throws BackupCryptoException, CryptoException, IOException, JSONException, OperazioneAnnullataException;
+
+void cancel();       // cancellazione cooperativa, controllata a inizio di ogni elemento del loop
+void esegui(Runnable operazione);
+void shutdown();     // chiude l'executor dedicato — chiamato da BackupViewModel.onCleared()
 ```
 
-`ExporterManager` possiede un proprio `ExecutorService` (uno solo, dedicato —
-non `AppExecutors.diskIO()`), creato nel costruttore e chiuso quando la sessione
-si blocca.
+`BackupResult` (nested, pubblica): `int totale`, `int riusciti`, `List<String> saltati`
+— non più `void`: sia export che import ora restituiscono un esito strutturato,
+usato da `BackupViewModel` per comporre il messaggio finale ("12 esportati, 1
+saltato").
 
-#### Flusso `exportMedia` (due passaggi, come per il PDF/video: file temporaneo in cache poi risultato finale)
+`OperazioneAnnullataException` (nested, pubblica, checked): sostituisce il vecchio
+`if (cancelled) return;` silenzioso. Lanciata ai checkpoint di cancellazione, si
+propaga fino a `BackupViewModel`, che la distingue esplicitamente da un errore vero
+(messaggio "operazione annullata" invece di un errore tecnico).
 
-1. Crea uno zip **non cifrato** su un file temporaneo in `getCacheDir()`
-   (prefisso `secnotes_tmp_`, stessa logica di pulizia di `pdf_view_*`/
-   `video_view_*`).
-2. Per ogni nota: `NoteRepository.loadNote(id)` (già decifra), scrive il testo
-   come entry nello zip, aggiunge una riga al manifest.
-3. Per ogni file: `FileRepository.loadFileToStream(id, entryOutputStream)`
-   (già esiste, decifra a blocchi da 64KB — **niente di nuovo qui**, si riusa
-   quello già scritto per il video), aggiunge una riga al manifest.
-4. Scrive `manifest.json` come ultima entry.
-5. Chiude lo zip temporaneo, poi `BackupCrypto.encryptStream(password, zipTemp, destinazione)`.
-6. Cancella il file temporaneo (anche in caso di eccezione, `finally`).
+## Skip-and-continue: un elemento problematico non blocca tutto il backup
 
-#### Flusso `importMedia` (simmetrico)
+**Il problema che risolve**: durante un export di molti elementi, l'utente potrebbe
+eliminare una nota/foto da un'altra schermata proprio mentre l'export ci sta
+arrivando (due thread diversi: `ExporterManager` ha il suo executor dedicato,
+Note/Archivio usano `AppExecutors.diskIO()`). Prima di questa modifica, un singolo
+elemento sparito avrebbe fatto fallire l'intero export.
 
-1. `BackupCrypto.decryptStream(password, sorgente, zipTempInChiaro)` — se la
-   password è sbagliata, fallisce qui e si esce subito.
-2. Legge `manifest.json` dallo zip temporaneo, controlla `schemaVersion`.
-3. Per ogni nota nel manifest: legge la entry (testo in chiaro), chiama
-   `NoteRepository.importNote(titolo, testo, dataCreazione, dataModifica)`
-   (metodo nuovo, vedi sotto) — la ricifratura avviene lì dentro, non qui.
-4. Per ogni file nel manifest: apre uno stream sulla entry corrispondente,
-   chiama `FileRepository.importFile(tipo, nomeOriginale, stream, dataCreazione)`
-   (metodo nuovo, vedi sotto).
-5. Cancella il file temporaneo.
+**Come funziona ora**, in `scriviZipInChiaro` (export) e `importaContenuti` (import):
+ogni nota/file viene processato dentro un `try/catch` individuale. Se fallisce, la
+descrizione dell'errore finisce in una lista `saltati` e il loop **continua** con
+l'elemento successivo — non propaga l'eccezione, non abortisce l'intera operazione.
 
----
+**Distinzione importante applicata in export**: la lettura/decifratura della nota
+(`noteRepository.loadNote(...)`) avviene **prima** di aprire la entry nello zip — se
+fallisce, l'entry non viene mai aperta, lo zip resta pulito. Per i file, invece,
+`loadFileToStream` legge *e* scrive nella stessa chiamata (decifra a blocchi
+scrivendo direttamente nella entry): se fallisce a metà, l'entry può restare aperta
+con contenuto parziale — ma **non viene aggiunta al manifest**, quindi in import
+viene semplicemente ignorata (l'import processa solo le entry elencate nel
+manifest). Nessun rischio di importare un file corrotto per errore.
 
-## Modifiche a classi esistenti
+**Report `skipped_report.txt`**: scritto come ultima entry dentro lo zip **in
+export**, testo semplice leggibile da una persona (non serve riparsarlo via app),
+elenca ogni elemento saltato con id/titolo/nome e il messaggio d'errore. Presente
+sempre, anche quando è vuoto ("Nessun elemento saltato."). **In import** non viene
+prodotto un file analogo (l'import consuma il backup, non ne genera uno): l'esito
+con eventuale conteggio di saltati arriva solo nel messaggio finale mostrato
+dall'utente tramite `BackupViewModel`.
 
-### `CryptoManager` — nuova aggiunta
+## `BackupViewModel`
 
-```java
-public OutputStream encryptStream(OutputStream destinazioneCifrata) throws CryptoException
-```
+**Perché serve**: prima, le lambda passate a `ExporterManager.esegui(...)` catturavano
+direttamente `SettingsActivity` (per `getContentResolver()`, i `Toast`, ecc.) — un
+riferimento diretto Activity↔thread di sfondo, diverso da come lavora il resto
+dell'app (Note/Archivio/Dashboard passano sempre da un `ViewModel`). Ora
+`SettingsActivity` è allineata allo stesso pattern.
 
-Simmetrico a `decryptStream` (già esiste, doc 11): genera un IV nuovo, lo
-scrive in testa a `destinazioneCifrata`, ritorna un `CipherOutputStream` su cui
-scrivere in chiaro a blocchi. Serve per l'import: non si vuole mai un `byte[]`
-intero in RAM nemmeno in fase di *ri*cifratura di un video importato — stesso
-principio di `decryptStream`, specchiato.
+**Cosa NON risolve**: il `ViewModel` sopravvive a una **rotazione schermo** (stessa
+Activity, ricreata), ma **non** a un'uscita vera dalla schermata (back, freccia
+toolbar) — in quel caso Android distrugge il `ViewModelStore` insieme all'Activity,
+e con lui il `ViewModel`. Per questo l'operazione **non prosegue in background se si
+naviga altrove**: è un limite noto, accettato per questa versione, con la
+mitigazione UI descritta sotto. Il percorso per farla sopravvivere davvero è
+`WorkManager` — vedi `todo-backup-workmanager.md`.
 
-### `NoteRepository` — nuovo metodo
+**Stato esposto**: `LiveData<BackupUiState>` con `enum Stato { INATTIVO, IN_CORSO,
+COMPLETATO, ERRORE }` + un messaggio già pronto per un `Toast`. `SettingsActivity`
+osserva e:
+- disabilita `btnExportBackup`/`btnImportBackup`/i due campi password quando
+  `IN_CORSO`;
+- mostra il messaggio e richiama `resetStato()` su `COMPLETATO`/`ERRORE` (per non
+  ripresentare lo stesso `Toast` se l'observer viene ri-registrato dopo una
+  rotazione schermo).
 
-```java
-public void importNote(String titolo, String testoChiaro, long dataCreazione, long dataModifica) throws CryptoException, IOException
-```
+**`onCleared()`**: chiama `exporterManager.cancel()` + `shutdown()` — l'unico punto
+che chiude l'executor dedicato, non serve più farlo manualmente in
+`SettingsActivity.onDestroy()`.
 
-Come `saveNote`, ma: genera comunque un UUID nuovo (mai riusa quello del
-device sorgente), **non** usa `System.currentTimeMillis()` per le date — le
-riceve già pronte e le passa così com'è alla riga Room.
+## Conferma prima di uscire durante un'operazione
 
-### `FileRepository` — nuovo metodo
+`SettingsActivity` registra un `OnBackPressedCallback` (sempre attivo) e passa anche
+`onSupportNavigateUp()` (freccia in toolbar) dallo stesso punto:
+`confermaUscita()`. Se `backupViewModel.isOperazioneInCorso()` è `true`, mostra un
+`AlertDialog` ("l'operazione verrà annullata, uscire comunque?") prima di chiamare
+`finish()`; altrimenti esce subito. Scegliendo "esci", si chiama
+`annullaOperazione()` (cancellazione cooperativa — l'elemento in corso di
+elaborazione in quel momento fa comunque in tempo a finire, il loop si ferma al
+checkpoint successivo) prima di `finish()`.
 
-```java
-public void importFile(String tipo, String nomeOriginale, InputStream contenutoChiaro, long dataCreazione) throws CryptoException, IOException
-```
+## Limitazioni note di questa versione (per riferimento, dettagliate nel TODO)
 
-Come `saveFile`, ma prende uno stream già in chiaro (invece di un `byte[]` da
-un `ContentResolver`) e scrive cifrando **a blocchi** via
-`cryptoManager.encryptStream(...)` — non `encrypt(byte[])` — proprio per non
-riproporre il problema di RAM già risolto per il video in lettura (doc 12,
-Fase 6/7), stavolta in scrittura. Data preservata come per `importNote`.
-
-### `SecureSession.unlock()` — estensione della pulizia residui
-
-Stessa idea già presente per `pdf_view_*`/`video_view_*` (doc 11), estesa al
-prefisso `secnotes_tmp_`, per il caso in cui il processo venga ucciso a metà
-di un export/import.
-
----
-
-## UI — modifiche a `SettingsActivity` / `activity_settings.xml`
-
-Sotto la sezione "Backup" già esistente, aggiungere due campi password prima
-di `btnExportBackup` (che va sbloccato, non più `setEnabled(false)`), più un
-nuovo tasto `btnImportBackup`:
-
-```xml
-<com.google.android.material.textfield.TextInputLayout
-    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="8dp"
-    android:hint="@string/hint_backup_password">
-
-    <com.google.android.material.textfield.TextInputEditText
-        android:id="@+id/editBackupPassword"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:inputType="textPassword" />
-
-</com.google.android.material.textfield.TextInputLayout>
-
-<com.google.android.material.textfield.TextInputLayout
-    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="8dp"
-    android:hint="@string/hint_backup_password_confirm">
-
-    <com.google.android.material.textfield.TextInputEditText
-        android:id="@+id/editBackupPasswordConfirm"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:inputType="textPassword" />
-
-</com.google.android.material.textfield.TextInputLayout>
-
-<!-- btnExportBackup: già esistente, va solo sbloccato -->
-
-<Button
-    android:id="@+id/btnImportBackup"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="8dp"
-    android:text="@string/action_import_backup" />
-```
-
-**Perché la password di import NON è un campo in questo layout**: è legata a
-un file specifico scelto al momento (via SAF), non a uno stato permanente
-della schermata Impostazioni. Il tasto `btnImportBackup` apre il file-picker;
-solo *dopo* la scelta del file compare un `AlertDialog` con un solo campo
-password (view custom minimale, non serve un intero layout XML dedicato) —
-si chiude da solo a operazione conclusa, niente campo che resta popolato a
-metà se l'utente annulla.
-
-Stringhe nuove da aggiungere: `hint_backup_password`,
-`hint_backup_password_confirm`, `action_import_backup`,
-`dialog_import_password_title`, `hint_import_password`,
-`error_backup_password_too_short`, `error_backup_password_mismatch`,
-`error_backup_wrong_password`, `msg_export_success`, `msg_import_success`,
-`error_export_failed`, `error_import_failed`.
-
-### Flusso export (lato UI)
-
-1. Utente compila i due campi password in `SettingsActivity`.
-2. Tap su "Esporta backup" → validazione locale (lunghezza minima 8,
-   corrispondenza dei due campi) → se ok, lancia
-   `ACTION_CREATE_DOCUMENT` con nome suggerito
-   `SecNotes_export_ddMMyy.secnotes`.
-3. Al ritorno dell'`Uri` di destinazione, `ExporterManager.exportMedia(...)`
-   parte sull'executor dedicato.
-4. A operazione conclusa (successo o errore), notifica l'utente (Toast o
-   dialog) — i campi password vengono azzerati subito dopo l'uso.
-
-### Flusso import (lato UI)
-
-1. Tap su "Importa backup" → `ActivityResultContracts.OpenDocument` (MIME
-   generico, `.secnotes` non è un tipo registrato).
-2. Al ritorno dell'`Uri` sorgente, mostra `AlertDialog` con campo password.
-3. Conferma → `ExporterManager.importMedia(...)` sull'executor dedicato.
-4. Successo/errore → notifica utente. Se la password era sbagliata, il
-   messaggio distingue esplicitamente questo caso (intercettando
-   `BackupCryptoException`) da un errore generico di file corrotto/manifest
-   non riconosciuto.
-
----
-
-## Punto aperto, da decidere prima o durante l'implementazione
-
-- **`SettingsActivity` non ha oggi un proprio ViewModel** (a differenza di
-  Note/Archivio/Dashboard). Per un'operazione lunga con progresso e possibile
-  cancellazione, converrebbe introdurre un `BackupViewModel` (stesso pattern
-  MVVM già usato ovunque nell'app: `LiveData<Integer>` per il progresso,
-  `LiveData<String>` per l'esito), invece di far parlare `SettingsActivity`
-  direttamente con `ExporterManager`. Consigliato per coerenza con il resto
-  del progetto, ma è un dettaglio che si può anche semplificare se si preferisce
-  tenere `SettingsActivity` più diretta.
-
-## Punti aperti pre-esistenti risolti da questo documento
-
-- ✅ "Requisiti della password di backup" (doc 06) → password dedicata, minimo
-  8 caratteri, conferma doppia in UI.
-- ✅ "Export backup criptato" (doc 09/10) → design completo, pronto per
-  l'implementazione.
+- Nessuna barra di progresso reale in UI (`ProgressListener` passato come `null`
+  da `BackupViewModel` — l'infrastruttura c'è già in `ExporterManager`, manca solo
+  il collegamento a una `LiveData<Integer>` osservata dall'Activity).
+- L'operazione non sopravvive a una navigazione fuori da `SettingsActivity` (vedi
+  sopra) — richiede `WorkManager` per essere risolto per davvero.
+- Nessuna notifica di sistema durante un'operazione lunga (necessaria comunque per
+  un eventuale futuro `Worker` in foreground su Android 12+).

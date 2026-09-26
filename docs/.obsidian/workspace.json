@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Architettura/02-livello-sessione.md",
+                "file": "Classi/security/CryptoManager.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "02-livello-sessione"
+              "title": "CryptoManager"
             }
           }
         ]
@@ -83,7 +83,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "692f2fd0fb5e2c08",
@@ -190,19 +191,46 @@
   },
   "active": "fa99054e242743c3",
   "lastOpenFiles": [
-    "Architettura/SecureNotes.canvas",
-    "structure.canvas",
-    "Architettura/00-panoramica.md",
+    "Classi/ui/settings/BackupViewModel.md",
+    "todo/todo-backup-workmanager.md",
+    "Classi/security/backupcryptoexception.md",
+    "Classi/security/backupcrypto.md",
+    "Classi/security/BackupCryptoException.md",
+    "Classi/manager/backup/exportermanager.md",
+    "Classi/manager/backup/ExporterManager.md",
+    "Classi/manager/backup/backupmanifest.md",
+    "Classi/manager/backup/BackupManifest.md",
+    "Classi/manager/backup/backupmanifest 1.md",
+    "Classi/ui/dashboard/DashboardViewModel.md",
+    "todo",
+    "Architettura/13-livello-backup-export-import.md",
+    "Classi/ui/dashboard/DashboardActivity.md",
+    "Classi/manager/repository/NoteRepository.md",
+    "Classi/manager/repository/FileRepository.md",
     "Architettura/06-punti-aperti.md",
-    "Architettura/05-flussi-sequenze.md",
-    "Architettura/04-livello-repository.md",
-    "Architettura/03-livello-dati.md",
-    "Architettura/02-livello-sessione.md",
-    "Architettura/01-livello-sicurezza.md",
-    "Architettura",
-    "files.zip",
+    "Classi/manager/backup",
+    "Classi/security/BackupCrypto.md",
+    "Architettura/00-panoramica.md",
+    "structure.canvas",
     "notes_index.md",
     "files_index.md",
-    "Senza nome"
+    "Architettura/10-riepilogo-progetto-v2.md",
+    "Architettura/09-livello-ui-dashboard-settings.md",
+    "Architettura/12-cronistoria-bug-video.md",
+    "Architettura/SecureNotes4.canvas",
+    "Architettura/SecureNotes.canvas",
+    "Architettura/SecureNotes3.canvas",
+    "Architettura/SecureNotes_Stato_Progetto.docx",
+    "Architettura/11-livello-ui-viewer.md",
+    "Classi/data/local/prefs/CrittografiaEPreferenze.md",
+    "Classi/data/local/prefs/SecurePrefsManager.md",
+    "Classi/ui/viewer",
+    "Classi/ui/settings",
+    "Classi/ui/archivio",
+    "Classi/ui/notes",
+    "Classi/ui/dashboard",
+    "Classi/ui/login",
+    "Classi/ui/common",
+    "Architettura/SecureNotes2.canvas"
   ]
 }

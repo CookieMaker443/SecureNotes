@@ -9,6 +9,6 @@ porta a note, archivio e impostazioni. Il nucleo protetto è
 [SecureSession](session/SecureSession.md), che fornisce database, chiave e percorsi ai repository.
 
 - [Dati locali](data/local/)
-- [Repository](manager/repository/)
+- [Repository](manager/repository/) · [backup](manager/backup/)
 - [Sicurezza e sessione](security/) · [sessione](session/)
 - [Interfaccia](ui/) · [Utilità](util/)

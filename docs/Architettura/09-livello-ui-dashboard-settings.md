@@ -91,9 +91,14 @@ del dispositivo autorizza il cambio. Stesso livello di fiducia già usato per lo
 sblocco dell'app.
 
 ### 4. Backup
-`btnExportBackup` presente ma `setEnabled(false)` — placeholder con Toast
-"funzione non ancora disponibile". Implementazione rimandata (vedi
-[06-punti-aperti.md](06-punti-aperti.md)).
+Due campi raccolgono e confermano la password di export (minimo otto caratteri).
+`btnExportBackup` apre il selettore SAF per la destinazione e `btnImportBackup` apre
+quello del file, poi mostra un dialog per la password. `SettingsActivity` delega il
+lavoro a `BackupViewModel`, che possiede `ExporterManager` e ne osserva lo stato via
+`LiveData`: durante l'operazione disabilita i controlli, mostra il conteggio degli
+elementi riusciti/saltati al termine e azzera le password in `char[]`. Uscendo dalla
+schermata durante un backup viene chiesta conferma e l'operazione è annullata in modo
+cooperativo; non prosegue in background.
 
 ---
 
@@ -125,7 +130,8 @@ DashboardActivity ──tasto Note────────► NotesListActivity
 SettingsActivity
     ├── AppSettings (timeout minuti, recent notes count — persistenza)
     ├── LockManager.getInstance() (effetto immediato sulla sessione corrente)
-    └── SecurePrefsManager (cambio PIN, dietro verifica BiometricPrompt)
+    ├── SecurePrefsManager (cambio PIN, dietro verifica BiometricPrompt)
+    └── BackupViewModel ──► ExporterManager (export/import .secnotes su executor dedicato)
 ```
 
 ---
@@ -136,7 +142,6 @@ SettingsActivity
 configurabile con clamp 3–30 min ed effetto immediato, cambio PIN protetto da
 biometria.
 
-⬜ Non ancora implementato:
-- **Export backup criptato** — solo placeholder disabilitato.
+⬜ Ancora da decidere:
 - **`allowBackup="true"` nel Manifest** — da decidere se disattivare o escludere
   selettivamente le cartelle sensibili (vedi [06-punti-aperti.md](06-punti-aperti.md)).

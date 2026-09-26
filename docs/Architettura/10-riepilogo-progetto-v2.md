@@ -10,8 +10,8 @@
 
 App Android (Java, API 26+, `compileSdk`/`targetSdk` 35) per note personali e file
 sensibili (foto, video, PDF), con autenticazione PIN/biometrica, cifratura locale
-end-to-end, timeout di sessione configurabile, backup criptato esportabile (non ancora
-implementato). Nessun cloud: tutto locale sul dispositivo. Architettura MVVM +
+end-to-end, timeout di sessione configurabile, backup criptato esportabile e
+importabile. Nessun cloud: tutto locale sul dispositivo. Architettura MVVM +
 Repository.
 
 ## Documentazione completa esistente

@@ -11,7 +11,6 @@ man mano che si chiudono o se ne aprono di nuovi.
   chiave. Aumenta la sicurezza ma introduce vincoli sull'uso in background.
 - [ ] **Dettaglio UI esatto** della modalità selezione per l'eliminazione multipla
   delle note (checkbox sulla lista).
-- [ ] **Requisiti della password di backup** (lunghezza minima, conferma doppia in UI).
 - [ ] **Root detection / tamper detection**: implementarla ora o rimandarla a
   "lavori futuri".
 
@@ -48,3 +47,5 @@ man mano che si chiudono o se ne aprono di nuovi.
 - ✅ Threading dei repository verso la UI: `ExecutorService` manuale (non
   RxJava/coroutine), coerente con un progetto in Java puro senza dipendenze
   reattive già presenti.
+- ✅ **Password di backup**: minimo otto caratteri, conferma doppia in export e
+  richiesta separata in import.

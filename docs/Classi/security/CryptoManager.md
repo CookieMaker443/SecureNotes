@@ -12,7 +12,10 @@ La chiave non viene esportata dall'archivio sicuro del dispositivo.
   sono usati per il contenuto delle note.
 - `encrypt` / `decrypt` lavorano su `byte[]`: sono usati per immagini, PDF e chiavi DB.
 - `decryptStream(InputStream)` legge prima l'IV di 12 byte e restituisce un `CipherInputStream`;
-  serve alla decifratura sequenziale dei video.
+  serve alla decifratura sequenziale di video e file durante l'export.
+- `encryptStream(OutputStream)` genera e scrive un IV di 12 byte, poi restituisce un
+  `CipherOutputStream` per cifrare in streaming. È usato per importare file da un backup
+  senza caricarli interamente in memoria.
 
 Ogni cifratura antepone l'IV casuale al ciphertext; GCM rileva dati alterati in decifratura.
 
@@ -21,5 +24,7 @@ Ogni cifratura antepone l'IV casuale al ciphertext; GCM rileva dati alterati in 
 [SecurePrefsManager](../data/local/prefs/SecurePrefsManager.md) cifra la chiave SQLCipher;
 [NoteRepository](../manager/repository/NoteRepository.md) e
 [FileRepository](../manager/repository/FileRepository.md) cifrano i contenuti.
+Per il file di backup, che deve poter essere aperto su un altro dispositivo, viene invece
+usato [BackupCrypto](BackupCrypto.md), indipendente dall'Android Keystore.
 La differenza tra le due classi e i livelli di protezione è illustrata in
 [Crittografia e preferenze](../data/local/prefs/CrittografiaEPreferenze.md).

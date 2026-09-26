@@ -39,6 +39,7 @@ dominio nei Repository e nei Manager di sicurezza.
 | [08-livello-ui-archivio.md](08-livello-ui-archivio.md) | `FileViewModel`, adapter lista/griglia, Fragment Foto/Video/PDF, `ArchivioActivity` |
 | [09-livello-ui-dashboard-settings.md](09-livello-ui-dashboard-settings.md) | `DashboardActivity`, `AppSettings`, `SettingsActivity` |
 | [10-riepilogo-progetto.md](10-riepilogo-progetto.md) | Riepilogo per ripristinare il contesto in una nuova chat |
+| [13-livello-backup-export-import.md](13-livello-backup-export-import.md) | Formato `.secnotes`, export/import e `BackupViewModel` |
 
 Vedi anche `SecureNotes.canvas` (apribile in Obsidian) per una vista visiva dei
 collegamenti tra tutte le classi.
