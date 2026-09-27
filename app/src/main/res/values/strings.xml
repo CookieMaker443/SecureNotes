@@ -107,6 +107,7 @@
     <string name="action_save">Save</string>
     <string name="error_title_required">Title is required</string>
     <string name="hint_enroll_biometric">Create biometric identity</string>
+    <string name="toast_deactivated_biometric">Biometric login deactivated</string>
 
 
 </resources>

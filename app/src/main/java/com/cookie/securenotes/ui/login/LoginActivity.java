@@ -53,6 +53,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
         if (!prefsManager.hasPin()) {
+            prefsManager.setBiometricEnabled(false);
             Toast.makeText(this, getString(R.string.toast_set_new_pin), Toast.LENGTH_SHORT).show();
             loginButton.setText(getString(R.string.btn_set_pin));
         } else {
@@ -88,35 +89,39 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void showBiometricPrompt() {
-        Executor executor = ContextCompat.getMainExecutor(this);
-        BiometricPrompt biometricPrompt = new BiometricPrompt(LoginActivity.this,
-                executor, new BiometricPrompt.AuthenticationCallback() {
-            @Override
-            public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
-                super.onAuthenticationError(errorCode, errString);
-                Toast.makeText(getApplicationContext(), getString(R.string.auth_error_prefix, errString), Toast.LENGTH_SHORT).show();
-            }
+        if (prefsManager.isBiometricEnabled()) {
+            Executor executor = ContextCompat.getMainExecutor(this);
+            BiometricPrompt biometricPrompt = new BiometricPrompt(LoginActivity.this,
+                    executor, new BiometricPrompt.AuthenticationCallback() {
+                @Override
+                public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
+                    super.onAuthenticationError(errorCode, errString);
+                    Toast.makeText(getApplicationContext(), getString(R.string.auth_error_prefix, errString), Toast.LENGTH_SHORT).show();
+                }
 
-            @Override
-            public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
-                super.onAuthenticationSucceeded(result);
-                unlockSessionAndProceed();
-            }
+                @Override
+                public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
+                    super.onAuthenticationSucceeded(result);
+                    unlockSessionAndProceed();
+                }
 
-            @Override
-            public void onAuthenticationFailed() {
-                super.onAuthenticationFailed();
-                Toast.makeText(getApplicationContext(), getString(R.string.auth_failed), Toast.LENGTH_SHORT).show();
-            }
-        });
+                @Override
+                public void onAuthenticationFailed() {
+                    super.onAuthenticationFailed();
+                    Toast.makeText(getApplicationContext(), getString(R.string.auth_failed), Toast.LENGTH_SHORT).show();
+                }
+            });
 
-        BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
-                .setTitle(getString(R.string.biometric_prompt_title))
-                .setSubtitle(getString(R.string.biometric_prompt_subtitle))
-                .setNegativeButtonText(getString(R.string.biometric_prompt_negative_text))
-                .build();
+            BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
+                    .setTitle(getString(R.string.biometric_prompt_title))
+                    .setSubtitle(getString(R.string.biometric_prompt_subtitle))
+                    .setNegativeButtonText(getString(R.string.biometric_prompt_negative_text))
+                    .build();
 
-        biometricPrompt.authenticate(promptInfo);
+            biometricPrompt.authenticate(promptInfo);
+        }else{
+            Toast.makeText(this, getString(R.string.toast_deactivated_biometric), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void navigateToDashboard() {

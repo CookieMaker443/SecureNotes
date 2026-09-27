@@ -106,5 +106,6 @@
     <string name="action_save">Salva</string>
     <string name="error_title_required">Il titolo è obbligatorio</string>>
     <string name="hint_enroll_biometric">Crea identità biometrica</string>
+    <string name="toast_deactivated_biometric">Sblocco biometrico non attivo</string>
 
 </resources>
