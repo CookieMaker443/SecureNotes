@@ -1,26 +1,25 @@
+# Gradle e Build
+.gradle/
+build/
+app/build/
+**/build/
+app/release/
+*.apk
+*.aab
+
+# Configurazioni IDE (Android Studio / IntelliJ / Obsidian)
+.idea/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.idea
 .DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
+docs/.obsidian/
 
-# configurazioni di obsidian
-/docs/.obsidian
-
+# Chiavi e credenziali (Firma APK)
 *.jks
 *.keystore
 keystore.properties
+local.properties
 
-# tutt i  file delle build
-/app/build
+# Log e file temporanei
+/captures
+.externalNativeBuild
+.cxx/
