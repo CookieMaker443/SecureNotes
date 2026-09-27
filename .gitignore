@@ -15,8 +15,12 @@
 .cxx
 local.properties
 
+# configurazioni di obsidian
 /docs/.obsidian
 
 *.jks
 *.keystore
 keystore.properties
+
+# tutt i  file delle build
+/app/build
